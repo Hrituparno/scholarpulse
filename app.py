@@ -17,211 +17,282 @@ if 'theme' not in st.session_state:
     st.session_state.theme = "Dark"
 
 def get_theme_css(theme):
-    # Neon Accent Colors
-    neon_green = "#39FF14"
-    neon_blue = "#00D2FF"
+    # Aurora Minimal Color Palette (2027 Trends)
+    primary_gradient = "linear-gradient(135deg, #6366F1, #8B5CF6)"
+    accent_pink = "#EC4899"
+    accent_amber = "#F59E0B"
     
-    accent = neon_green if theme == "Dark" else neon_blue if theme == "Night" else "#F44336"
-    bg_color = "#0B0C10" if theme == "Dark" else "#000000" if theme == "Night" else "#F4F7F6"
-    card_bg = "rgba(31, 41, 55, 0.7)" if theme != "Light" else "#FFFFFF"
-    text_color = "#FFFFFF" if theme != "Light" else "#1F2937"
+    # Theme-specific colors
+    if theme == "Dark":
+        bg_color = "#0F0F23"
+        card_bg = "rgba(30, 30, 60, 0.6)"
+        text_primary = "#F1F5F9"
+        text_muted = "#94A3B8"
+        accent = "#8B5CF6"
+        border_color = "rgba(139, 92, 246, 0.15)"
+    elif theme == "Night":
+        bg_color = "#09090B"
+        card_bg = "rgba(24, 24, 27, 0.8)"
+        text_primary = "#FAFAFA"
+        text_muted = "#71717A"
+        accent = "#6366F1"
+        border_color = "rgba(99, 102, 241, 0.15)"
+    else:  # Light
+        bg_color = "#FAFBFC"
+        card_bg = "rgba(255, 255, 255, 0.9)"
+        text_primary = "#18181B"
+        text_muted = "#52525B"
+        accent = "#7C3AED"
+        border_color = "rgba(124, 58, 237, 0.1)"
     
     return f"""
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
         
+        /* Base Styles */
         .stApp {{ 
-            background-color: {bg_color}; 
-            color: {text_color};
-            font-family: 'Space Grotesk', sans-serif;
+            background: {bg_color};
+            background-image: radial-gradient(ellipse at top, {accent}08 0%, transparent 50%);
+            color: {text_primary};
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
         }}
         
-        /* Neon Glow Text */
-        .neon-text {{
-            color: {accent};
-            text-shadow: 0 0 10px {accent}44, 0 0 20px {accent}22;
+        /* Smooth Fade-in Animation */
+        @keyframes fadeInUp {{
+            from {{ opacity: 0; transform: translateY(20px); }}
+            to {{ opacity: 1; transform: translateY(0); }}
         }}
-
-        /* Navbar Evolution */
+        
+        @keyframes shimmer {{
+            0% {{ background-position: -200% 0; }}
+            100% {{ background-position: 200% 0; }}
+        }}
+        
+        /* Modern Navbar */
         .top-navbar {{
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
-            height: 65px;
-            background: rgba(0,0,0,0.8);
-            backdrop-filter: blur(12px);
+            height: 64px;
+            background: {card_bg};
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
             z-index: 1000;
             display: flex;
             align-items: center;
-            padding: 0 30px;
-            border-bottom: 1px solid {accent}33;
+            padding: 0 32px;
+            border-bottom: 1px solid {border_color};
         }}
         .top-navbar-brand {{ 
-            color: {accent}; 
-            font-size: 1.6rem; 
-            font-weight: 800; 
-            letter-spacing: 1px;
-            text-shadow: 0 0 15px {accent}55;
+            background: {primary_gradient};
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 1.4rem; 
+            font-weight: 700; 
+            letter-spacing: -0.5px;
         }}
 
-        /* Sidebar Social Styling */
+        /* Refined Sidebar */
         [data-testid="stSidebar"] {{
-            background-color: {'#0F111A' if theme != 'Light' else '#FFFFFF'} !important;
-            padding-top: 20px;
-            border-right: 1px solid {accent}22;
+            background: {card_bg} !important;
+            backdrop-filter: blur(24px);
+            border-right: 1px solid {border_color};
+            padding-top: 24px;
         }}
         
         .nav-item {{
-            padding: 12px 20px;
-            border-radius: 12px;
-            margin: 4px 10px;
-            transition: all 0.3s;
+            padding: 12px 16px;
+            border-radius: 10px;
+            margin: 4px 12px;
+            transition: all 0.2s ease;
             cursor: pointer;
             display: flex;
             align-items: center;
-            gap: 15px;
-            color: {text_color}88;
+            gap: 12px;
+            color: {text_muted};
+            font-weight: 500;
+            font-size: 0.9rem;
         }}
         .nav-item:hover, .nav-active {{
-            background: {accent}1a;
+            background: {accent}15;
             color: {accent} !important;
         }}
 
-        /* KPI Neon Cards */
+        /* Bento-Style Cards */
         .kpi-card {{
             background: {card_bg};
-            backdrop-filter: blur(10px);
+            backdrop-filter: blur(20px);
             padding: 24px;
-            border-radius: 16px;
-            border: 1px solid {accent}22;
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            margin-bottom: 15px;
+            border-radius: 20px;
+            border: 1px solid {border_color};
+            transition: all 0.3s ease;
+            animation: fadeInUp 0.5s ease forwards;
         }}
         .kpi-card:hover {{
-            border-color: {accent};
-            box-shadow: 0 0 25px {accent}22;
-            transform: translateY(-5px);
+            border-color: {accent}40;
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
         }}
         
         /* History Items */
         .history-item {{
             font-size: 0.85rem;
-            padding: 8px 15px;
-            border-left: 2px solid {accent}44;
+            padding: 10px 14px;
+            border-radius: 8px;
+            background: {accent}08;
             margin-bottom: 8px;
-            opacity: 0.7;
-            transition: 0.3s;
+            transition: all 0.2s ease;
+            border-left: 3px solid transparent;
         }}
         .history-item:hover {{
-            opacity: 1;
+            background: {accent}15;
             border-left-color: {accent};
-            background: {accent}11;
         }}
 
-        /* Result Cards (Glassmorphism) */
+        /* Modern Result Cards */
         .result-card {{
             background: {card_bg};
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,0.05);
-            border-radius: 16px;
-            padding: 25px;
-            margin-bottom: 25px;
-            transition: 0.4s;
+            backdrop-filter: blur(20px);
+            border: 1px solid {border_color};
+            border-radius: 20px;
+            padding: 24px;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+            animation: fadeInUp 0.5s ease forwards;
         }}
         .result-card:hover {{
-            border-color: {accent}66;
-            background: {card_bg};
-            box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+            border-color: {accent}30;
+            transform: translateY(-2px) scale(1.01);
+            box-shadow: 0 24px 48px rgba(0,0,0,0.12);
         }}
-        /* Master System Load Animation */
-        @keyframes pulse-glow {{
-            0% {{ box-shadow: 0 0 5px {accent}44; }}
-            50% {{ box-shadow: 0 0 20px {accent}88; }}
-            100% {{ box-shadow: 0 0 5px {accent}44; }}
-        }}
+        
+        /* Modern Button Styling */
         .stButton>button {{
-            background: {accent}1a !important;
-            border: 1px solid {accent}44 !important;
-            color: {accent} !important;
-            font-weight: 700 !important;
-            letter-spacing: 2px !important;
-            text-transform: uppercase !important;
-            transition: 0.3s !important;
-            animation: pulse-glow 2s infinite;
+            background: {primary_gradient} !important;
+            border: none !important;
+            color: white !important;
+            font-weight: 600 !important;
+            letter-spacing: 0.5px !important;
+            padding: 12px 24px !important;
+            border-radius: 12px !important;
+            transition: all 0.3s ease !important;
+            box-shadow: 0 4px 14px {accent}40 !important;
         }}
         .stButton>button:hover {{
-            background: {accent} !important;
-            color: black !important;
-            box-shadow: 0 0 30px {accent}66 !important;
+            transform: translateY(-2px) !important;
+            box-shadow: 0 8px 24px {accent}50 !important;
         }}
 
+        .card-img {{
+            transition: transform 0.5s ease;
+        }}
         .card-img:hover {{
-            transform: scale(1.1);
+            transform: scale(1.05);
         }}
         
-        .block-container {{ padding-top: 6rem !important; }}
+        .block-container {{ padding-top: 5rem !important; }}
         
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar {{ width: 6px; }}
+        /* Elegant Scrollbar */
+        ::-webkit-scrollbar {{ width: 8px; }}
         ::-webkit-scrollbar-track {{ background: transparent; }}
-        ::-webkit-scrollbar-thumb {{ background: {accent}33; border-radius: 10px; }}
-        ::-webkit-scrollbar-thumb:hover {{ background: {accent}66; }}
+        ::-webkit-scrollbar-thumb {{ 
+            background: {accent}30; 
+            border-radius: 10px; 
+        }}
+        ::-webkit-scrollbar-thumb:hover {{ background: {accent}50; }}
+        
+        /* Text Input Styling */
+        .stTextInput>div>div>input {{
+            background: {card_bg} !important;
+            border: 1px solid {border_color} !important;
+            border-radius: 12px !important;
+            color: {text_primary} !important;
+            padding: 14px 18px !important;
+            font-size: 1rem !important;
+            transition: all 0.3s ease !important;
+        }}
+        .stTextInput>div>div>input:focus {{
+            border-color: {accent} !important;
+            box-shadow: 0 0 0 3px {accent}20 !important;
+        }}
+        
+        /* Select Box Styling */
+        .stSelectbox>div>div {{
+            background: {card_bg} !important;
+            border-color: {border_color} !important;
+            border-radius: 10px !important;
+        }}
+        
+        /* Gradient Text Utility */
+        .gradient-text {{
+            background: {primary_gradient};
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }}
     </style>
     """
 
 def render_kpi_card(label, value, icon, accent_color):
+    """Modern Bento-style KPI card with gradient accent."""
     return f"""
     <div class="kpi-card">
-        <div style="font-size: 1.5rem; margin-bottom: 10px;">{icon}</div>
-        <div style="font-size: 0.75rem; color: #888; text-transform: uppercase; font-weight: 700; letter-spacing: 1px;">{label}</div>
-        <div style="font-size: 1.8rem; font-weight: 800; color: {accent_color};">{value}</div>
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <div>
+                <div style="font-size: 0.75rem; color: #94A3B8; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px; margin-bottom: 8px;">{label}</div>
+                <div style="font-size: 2rem; font-weight: 700; background: linear-gradient(135deg, #6366F1, #8B5CF6); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">{value}</div>
+            </div>
+            <div style="font-size: 2rem; opacity: 0.6;">{icon}</div>
+        </div>
     </div>
     """
 
+
 def render_result_card(title, summary, link, authors=None):
-    """Generates HTML for a Neon Noir result card with imagery."""
-    accent = "#39FF14" if st.session_state.theme == "Dark" else "#00D2FF" if st.session_state.theme == "Night" else "#F44336"
+    """Modern Aurora Minimal result card with refined aesthetics."""
+    # Aurora palette accents
+    accent = "#8B5CF6" if st.session_state.theme == "Dark" else "#6366F1" if st.session_state.theme == "Night" else "#7C3AED"
     
-    # Generate a deterministic placeholder based on title length or random research theme
+    # Generate a deterministic placeholder based on title length
     img_seed = len(title) % 10
     research_images = [
-        "https://images.unsplash.com/photo-1485827404703-89b55fcc595e?auto=format&fit=crop&w=800&q=80", # Robotics
-        "https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=800&q=80", # Tech
-        "https://images.unsplash.com/photo-1507413245164-6160d8298b31?auto=format&fit=crop&w=800&q=80", # Lab
-        "https://images.unsplash.com/photo-1531297484001-80022131f5a1?auto=format&fit=crop&w=800&q=80", # Logic
-        "https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=800&q=80", # Neural
-        "https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=800&q=80", # Intelligence
-        "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=800&q=80", # Cybersecurity
-        "https://images.unsplash.com/photo-1558494949-ef010958d684?auto=format&fit=crop&w=800&q=80", # Server
-        "https://images.unsplash.com/photo-1532094349884-543bc11b234d?auto=format&fit=crop&w=800&q=80", # Data
-        "https://images.unsplash.com/photo-1620712943543-bcc4628c9757?auto=format&fit=crop&w=800&q=80"  # AI Glass
+        "https://images.unsplash.com/photo-1485827404703-89b55fcc595e?auto=format&fit=crop&w=800&q=80",
+        "https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=800&q=80",
+        "https://images.unsplash.com/photo-1507413245164-6160d8298b31?auto=format&fit=crop&w=800&q=80",
+        "https://images.unsplash.com/photo-1531297484001-80022131f5a1?auto=format&fit=crop&w=800&q=80",
+        "https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=800&q=80",
+        "https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=800&q=80",
+        "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=800&q=80",
+        "https://images.unsplash.com/photo-1558494949-ef010958d684?auto=format&fit=crop&w=800&q=80",
+        "https://images.unsplash.com/photo-1532094349884-543bc11b234d?auto=format&fit=crop&w=800&q=80",
+        "https://images.unsplash.com/photo-1620712943543-bcc4628c9757?auto=format&fit=crop&w=800&q=80"
     ]
     img_url = research_images[img_seed]
 
-    # Added onerror fallback and more descriptive title
     return f"""
     <div class="result-card">
-        <div style="width: 100%; height: 160px; border-radius: 12px; overflow: hidden; margin-bottom: 20px; border: 1px solid {accent}1a; background: #1a1a1a;">
+        <div style="width: 100%; height: 140px; border-radius: 14px; overflow: hidden; margin-bottom: 16px; background: linear-gradient(135deg, {accent}15, {accent}05);">
             <img src="{img_url}" 
-                 onerror="this.src='https://plus.unsplash.com/premium_photo-1661877737564-3dfd7282efcb?auto=format&fit=crop&w=800&q=80'"
-                 style="width: 100%; height: 100%; object-fit: cover; opacity: 0.8; transition: transform 0.6s ease;" 
+                 onerror="this.src='https://images.unsplash.com/photo-1620712943543-bcc4628c9757?auto=format&fit=crop&w=800&q=80'"
+                 style="width: 100%; height: 100%; object-fit: cover; opacity: 0.85;" 
                  class="card-img">
         </div>
-        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
-            <span style="background: {accent}22; color: {accent}; padding: 4px 12px; border-radius: 20px; font-size: 0.7rem; font-weight: 800;">DISCOVERY</span>
-            <span style="color: #888; font-size: 0.75rem; font-weight: 600;">{authors[0] if authors else 'Web Intelligence'}</span>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <span style="background: linear-gradient(135deg, {accent}20, {accent}10); color: {accent}; padding: 6px 14px; border-radius: 8px; font-size: 0.7rem; font-weight: 600; letter-spacing: 0.5px;">DISCOVERY</span>
+            <span style="color: #94A3B8; font-size: 0.75rem; font-weight: 500;">{authors[0] if authors else 'AI Intelligence'}</span>
         </div>
         <a href="{link}" target="_blank" style="text-decoration: none; color: inherit;">
-            <h4 style="margin-top: 0; font-size: 1.15rem; line-height: 1.4; margin-bottom: 10px; font-weight: 700;">{title}</h4>
-            <div style="font-size: 0.85rem; color: #777; margin-bottom: 15px; line-height: 1.5; height: 3em; overflow: hidden;">{summary[:160]}...</div>
-            <div style="border-top: 1px solid rgba(128,128,128,0.1); padding-top: 15px; color: {accent}; font-weight: 700; font-size: 0.85rem; display: flex; align-items: center; justify-content: space-between;">
-                <span>View Full Discovery</span>
-                <span style="font-size: 1.1rem; filter: drop-shadow(0 0 5px {accent}aa);">↗</span>
+            <h4 style="margin: 0 0 10px 0; font-size: 1.1rem; line-height: 1.4; font-weight: 600; color: #F1F5F9;">{title}</h4>
+            <p style="font-size: 0.85rem; color: #94A3B8; margin: 0 0 16px 0; line-height: 1.5; height: 3.2em; overflow: hidden;">{summary[:150]}...</p>
+            <div style="display: flex; align-items: center; gap: 8px; color: {accent}; font-weight: 600; font-size: 0.85rem;">
+                <span>Explore →</span>
             </div>
         </a>
     </div>
     """
+
 
 # Handle Session State for History & KPIs & Analytics
 import datetime
@@ -240,28 +311,26 @@ hrs, rem = divmod(elapsed_sec, 3600)
 mins, secs = divmod(rem, 60)
 screen_time_str = f"{hrs:02d}:{mins:02d}:{secs:02d}"
 
-st.markdown(get_theme_css(st.session_state.theme), unsafe_allow_html=True)
-
 # Apply Theme CSS
 st.markdown(get_theme_css(st.session_state.theme), unsafe_allow_html=True)
-accent = "#39FF14" if st.session_state.theme == "Dark" else "#00D2FF" if st.session_state.theme == "Night" else "#F44336"
+accent = "#8B5CF6" if st.session_state.theme == "Dark" else "#6366F1" if st.session_state.theme == "Night" else "#7C3AED"
 
-# Top Navbar (Glassmorphism)
+# Modern Navbar
 st.markdown(f"""
 <div class="top-navbar">
-    <a class="top-navbar-brand" href="#">SCHOLARPULSE <span style="font-weight: 300; opacity: 0.7;">NOIR EDITION</span></a>
+    <a class="top-navbar-brand" href="#">ScholarPulse</a>
 </div>
 """, unsafe_allow_html=True)
 
 # Sidebar Evolution
 with st.sidebar:
-    # Profile Card (Linda Stewart Style)
+    # Modern Profile Card
     st.markdown(f"""
-    <div style='padding: 20px; color: white; display: flex; align-items: center; gap: 15px; margin-bottom: 20px;'>
-        <img src="https://www.w3schools.com/howto/img_avatar.png" style="width: 60px; border-radius: 50%; border: 2px solid {accent}; box-shadow: 0 0 15px {accent}44;">
+    <div style='padding: 20px; display: flex; align-items: center; gap: 14px; margin-bottom: 24px;'>
+        <div style="width: 48px; height: 48px; border-radius: 12px; background: linear-gradient(135deg, #6366F1, #8B5CF6); display: flex; align-items: center; justify-content: center; font-size: 1.4rem;">🧠</div>
         <div>
-            <div style="font-weight: 700; font-size: 1.1rem;">ScholarPulse</div>
-            <div style="font-size: 0.75rem; opacity: 0.6;">research.agent@elite.ai</div>
+            <div style="font-weight: 600; font-size: 1rem; color: #F1F5F9;">ScholarPulse</div>
+            <div style="font-size: 0.75rem; color: #94A3B8;">AI Research Agent</div>
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -306,8 +375,8 @@ with st.sidebar:
         st.rerun()
 
 # Main Dashboard Layout
-st.markdown(f"<h1 style='margin-bottom: 5px; font-weight: 800;'>Hello, Researcher!</h1>", unsafe_allow_html=True)
-st.markdown(f"<p style='color: #888; margin-bottom: 30px;'>Ready to push the boundaries of science today?</p>", unsafe_allow_html=True)
+st.markdown(f"<h1 style='margin-bottom: 8px; font-weight: 700; font-size: 2rem;'>Welcome back</h1>", unsafe_allow_html=True)
+st.markdown(f"<p style='color: #94A3B8; margin-bottom: 32px; font-size: 1rem;'>What would you like to research today?</p>", unsafe_allow_html=True)
 
 # KPI Row (Neon)
 kpi_area = st.empty()
@@ -321,13 +390,13 @@ def update_kpi_row():
 
 update_kpi_row()
 
-# Research Input Area (Glassmorphism)
+# Research Input Area (Modern Card)
 with st.container():
-    st.markdown(f"<div style='background: {accent}11; padding: 30px; border-radius: 20px; border: 1px dashed {accent}33; margin-top: 20px;'>", unsafe_allow_html=True)
-    query = st.text_input("QUERY_INPUT", placeholder="Enter your research query for the Neon engine...", label_visibility="collapsed")
+    st.markdown(f"<div style='background: rgba(99, 102, 241, 0.05); padding: 28px; border-radius: 16px; border: 1px solid rgba(99, 102, 241, 0.1); margin-top: 16px;'>", unsafe_allow_html=True)
+    query = st.text_input("QUERY_INPUT", placeholder="Enter your research query...", label_visibility="collapsed")
     col_u1, col_u2 = st.columns([2, 1])
     with col_u1:
-        go_button = st.button("⚡ EXECUTE NEON RESEARCH", width="stretch")
+        go_button = st.button("✨ Start Research", width="stretch")
     with col_u2:
         uploaded_file = st.file_uploader("PDF_UPLOAD", type=["pdf"], label_visibility="collapsed")
     st.markdown("</div>", unsafe_allow_html=True)
@@ -341,13 +410,13 @@ if go_button:
     if not query and not uploaded_file:
         st.warning("Please enter a query or upload a file.")
     else:
-        # Master System Load (Wow Factor)
+        # Modern Loading State
         with st.container():
-            st.markdown(f"<h3 style='color: {accent}; text-align: center; letter-spacing: 5px;'>INITIATING NEON DISCOVERY</h3>", unsafe_allow_html=True)
+            st.markdown(f"<p style='color: {accent}; text-align: center; font-weight: 600; letter-spacing: 1px; margin-bottom: 16px;'>Analyzing your research query...</p>", unsafe_allow_html=True)
             progress_bar = st.progress(0)
             for i in range(101):
                 import time
-                time.sleep(0.01)
+                time.sleep(0.008)
                 progress_bar.progress(i)
         
         # Save to History
@@ -399,7 +468,7 @@ if go_button:
                     btn_col3.download_button("🔗 Markdown (.md)", f.read(), os.path.basename(report_md_path), width="stretch")
                 
                 st.markdown("---")
-                st.markdown(f"<h3 class='neon-text'>📊 Discovery Dashboard</h3>", unsafe_allow_html=True)
+                st.markdown(f"<h3 class='gradient-text' style='font-weight: 600;'>📊 Research Discoveries</h3>", unsafe_allow_html=True)
                 
                 grid_cols = st.columns(2)
                 for idx, paper in enumerate(papers):
@@ -419,4 +488,4 @@ if go_button:
             else:
                 status.update(label="❌ Analysis Interrupted", state="error")
 
-st.markdown("<br><br><br><br><p style='text-align: center; color: #4b5563; font-size: 0.8rem;'>ScholarPulse Noir | 2026 Production Environment</p>", unsafe_allow_html=True)
+st.markdown("<br><br><br><p style='text-align: center; color: #64748B; font-size: 0.8rem;'>ScholarPulse · Built with ❤️ for researchers</p>", unsafe_allow_html=True)
