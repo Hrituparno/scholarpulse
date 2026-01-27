@@ -251,11 +251,49 @@ def render_kpi_card(label, value, icon, accent_color):
 
 
 def render_result_card(title, summary, link, authors=None):
-    """Modern Aurora Minimal result card with refined aesthetics."""
+    """Modern Aurora Minimal result card with hover-activated keyword links."""
+    import re
+    import urllib.parse
+    
     # Aurora palette accents
     accent = "#8B5CF6" if st.session_state.theme == "Dark" else "#6366F1" if st.session_state.theme == "Night" else "#7C3AED"
     
-    # Generate a deterministic placeholder based on title length
+    # Extract keywords from title (words > 4 chars, excluding common words)
+    stopwords = {'with', 'from', 'that', 'this', 'have', 'will', 'been', 'were', 'their', 'what', 'there', 'about', 'which', 'when', 'make', 'like', 'into', 'just', 'over', 'such', 'through', 'using', 'based', 'approach', 'method', 'study', 'analysis', 'paper', 'research'}
+    words = re.findall(r'\b[A-Za-z]{4,}\b', title)
+    keywords = [w for w in words if w.lower() not in stopwords][:4]  # Max 4 keywords
+    
+    # Create title with hoverable keywords
+    title_html = title
+    for kw in keywords:
+        search_url = f"https://www.google.com/search?q={urllib.parse.quote(kw + ' research')}"
+        keyword_span = f'''<span class="keyword-hover" style="position: relative; cursor: help; border-bottom: 1px dashed {accent}50; transition: all 0.2s;">
+            {kw}
+            <span class="keyword-tooltip" style="
+                position: absolute;
+                bottom: 100%;
+                left: 50%;
+                transform: translateX(-50%) translateY(-5px);
+                background: linear-gradient(135deg, #1E1E3F, #2D2D5A);
+                color: #F1F5F9;
+                padding: 8px 12px;
+                border-radius: 8px;
+                font-size: 0.7rem;
+                white-space: nowrap;
+                opacity: 0;
+                visibility: hidden;
+                transition: all 0.2s ease;
+                box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+                z-index: 100;
+                border: 1px solid {accent}30;
+            ">
+                🔍 <a href="{search_url}" target="_blank" style="color: {accent}; text-decoration: none;">Search "{kw}"</a>
+            </span>
+        </span>'''
+        # Replace only first occurrence
+        title_html = title_html.replace(kw, keyword_span, 1)
+    
+    # Generate deterministic image
     img_seed = len(title) % 10
     research_images = [
         "https://images.unsplash.com/photo-1485827404703-89b55fcc595e?auto=format&fit=crop&w=800&q=80",
@@ -272,6 +310,17 @@ def render_result_card(title, summary, link, authors=None):
     img_url = research_images[img_seed]
 
     return f"""
+    <style>
+        .keyword-hover:hover .keyword-tooltip {{
+            opacity: 1 !important;
+            visibility: visible !important;
+            transform: translateX(-50%) translateY(-8px) !important;
+        }}
+        .keyword-hover:hover {{
+            color: {accent};
+            border-bottom-color: {accent};
+        }}
+    </style>
     <div class="result-card">
         <div style="width: 100%; height: 140px; border-radius: 14px; overflow: hidden; margin-bottom: 16px; background: linear-gradient(135deg, {accent}15, {accent}05);">
             <img src="{img_url}" 
@@ -283,12 +332,10 @@ def render_result_card(title, summary, link, authors=None):
             <span style="background: linear-gradient(135deg, {accent}20, {accent}10); color: {accent}; padding: 6px 14px; border-radius: 8px; font-size: 0.7rem; font-weight: 600; letter-spacing: 0.5px;">DISCOVERY</span>
             <span style="color: #94A3B8; font-size: 0.75rem; font-weight: 500;">{authors[0] if authors else 'AI Intelligence'}</span>
         </div>
-        <a href="{link}" target="_blank" style="text-decoration: none; color: inherit;">
-            <h4 style="margin: 0 0 10px 0; font-size: 1.1rem; line-height: 1.4; font-weight: 600; color: #F1F5F9;">{title}</h4>
-            <p style="font-size: 0.85rem; color: #94A3B8; margin: 0 0 16px 0; line-height: 1.5; height: 3.2em; overflow: hidden;">{summary[:150]}...</p>
-            <div style="display: flex; align-items: center; gap: 8px; color: {accent}; font-weight: 600; font-size: 0.85rem;">
-                <span>Explore →</span>
-            </div>
+        <div style="margin: 0 0 10px 0; font-size: 1.1rem; line-height: 1.5; font-weight: 600; color: #F1F5F9;">{title_html}</div>
+        <p style="font-size: 0.85rem; color: #94A3B8; margin: 0 0 16px 0; line-height: 1.5; height: 3.2em; overflow: hidden;">{summary[:150]}...</p>
+        <a href="{link}" target="_blank" style="text-decoration: none; color: {accent}; font-weight: 600; font-size: 0.85rem; display: flex; align-items: center; gap: 8px;">
+            <span>Explore →</span>
         </a>
     </div>
     """
