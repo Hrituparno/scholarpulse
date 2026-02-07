@@ -372,6 +372,78 @@ def get_theme_css(theme: str = "Dark") -> str:
                 max-width: 400px;
                 line-height: 1.6;
             }}
+
+            /* Enhanced Report Cards UI */
+            .card-metadata {{
+                display: flex;
+                gap: 12px;
+                align-items: center;
+                margin-bottom: 16px;
+                font-size: 0.8rem;
+                color: {text_muted};
+                font-weight: 500;
+                opacity: 0.8;
+            }}
+            .card-metadata span {{ 
+                display: flex; 
+                align-items: center; 
+                gap: 4px; 
+            }}
+            
+            .insight-highlights {{
+                background: rgba(0,0,0,0.1);
+                border-radius: 12px;
+                padding: 12px;
+                margin: 16px 0;
+                border: 1px dashed {border_color};
+            }}
+            .insight-title {{
+                font-size: 0.72rem;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                color: {accent};
+                margin-bottom: 8px;
+            }}
+            
+            .insight-chips {{
+                display: flex;
+                flex-wrap: wrap;
+                gap: 6px;
+            }}
+            .insight-chip {{
+                background: {accent}15;
+                color: {text_primary};
+                padding: 4px 10px;
+                border-radius: 6px;
+                font-size: 0.75rem;
+                font-weight: 500;
+                border: 1px solid {accent}25;
+                transition: all 0.2s ease;
+            }}
+            .insight-chip:hover {{
+                background: {accent}25;
+                transform: translateY(-1px);
+            }}
+
+            .summary-expandable {{
+                font-size: 0.92rem;
+                line-height: 1.6;
+                color: {text_primary}dd;
+                position: relative;
+                overflow: hidden;
+                transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            }}
+            
+            /* Enhanced Premium Card Hover */
+            .premium-card:hover {{
+                transform: translateY(-8px) scale(1.015);
+                box-shadow: 0 25px 50px rgba(0,0,0,0.3), 0 0 20px {shadow_accent};
+                border-color: {accent}60;
+            }}
+            .premium-card:hover .insight-chip {{
+                border-color: {accent}50;
+            }}
         </style>
     """)
 

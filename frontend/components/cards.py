@@ -28,12 +28,7 @@ def _get_paper_pill_html(text: str, accent_color: str) -> str:
 
 def render_paper_card(paper: Dict, theme: str = "Dark", index: int = 0):
     """
-    Render a modern paper result card with premium motion.
-    
-    Args:
-        paper: Paper dict with title, summary, authors, pdf_url, etc.
-        theme: Color theme
-        index: Card index for animation delay
+    Render an enhanced paper result card with visual hierarchy and key insights.
     """
     accent = "#8B5CF6" if theme == "Dark" else "#6366F1" if theme == "Night" else "#7C3AED"
     text_color = "#F1F5F9" if theme != "Light" else "#18181B"
@@ -41,29 +36,59 @@ def render_paper_card(paper: Dict, theme: str = "Dark", index: int = 0):
     border = f"{accent}20"
     
     title = _sanitize(paper.get('title', 'Untitled'))
-    summary = _sanitize(paper.get('summary', 'No summary available.'))[:280]
+    summary = _sanitize(paper.get('summary', 'No summary available.'))
     authors = [_sanitize(a) for a in paper.get('authors', [])]
-    author_str = ', '.join(authors[:3]) + ('...' if len(authors) > 3 else '')
+    author_str = authors[0] if authors else "Unknown"
+    year = paper.get('year', '2024')
+    source = _sanitize(paper.get('source', 'Scholar'))
+    
     pdf_url = paper.get('pdf_url', '#')
     scholar_url = paper.get('google_scholar_url', '#')
     objective = _sanitize(paper.get('objective', 'N/A'))
     method = _sanitize(paper.get('method', 'N/A'))
     
-    # Generate styled tags
-    method_pill = _get_paper_pill_html(method, accent)
+    # Extract "Key Insights" from summary (split into sentences and take first 2)
+    sentences = [s.strip() for s in re.split(r'[.!?]', summary) if len(s.strip()) > 10]
+    insights = sentences[:3]
+    insight_chips_html = "".join([f'<div class="insight-chip">{i[:40]}...</div>' for i in insights])
+    
+    # Generate metadata row
+    metadata_html = f"""
+<div class="card-metadata">
+<span>👤 {author_str}</span>
+<span>📅 {year}</span>
+<span>🌐 {source}</span>
+</div>
+"""
     
     # CRITICAL: NO INDENTATION in the multiline string for st.markdown
     html = f"""
 <div class="premium-card" style="animation-delay: {index * 0.1}s; display: flex; flex-direction: column;">
-<h4 style="margin: 0 0 12px 0; font-size: 1.15rem; font-weight: 700; color: {text_color}; line-height: 1.3;">{title}</h4>
-<div style="display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap;">{method_pill}</div>
-<p style="color: {muted}; font-size: 0.85rem; margin-bottom: 10px; line-height: 1.6;"><strong style="color: {text_color}; font-weight: 600;">Objective:</strong> {objective}</p>
-<p style="color: {muted}; font-size: 0.85rem; margin-bottom: 16px; line-height: 1.6; opacity: 0.9;">{summary}...</p>
-<div style="display: flex; justify-content: space-between; align-items: center; padding-top: 14px; border-top: 1px solid {border}; margin-top: auto;">
-<span style="font-size: 0.75rem; color: {muted}; font-weight: 500;">👤 {author_str}</span>
+<h4 style="margin: 0 0 8px 0; font-size: 1.25rem; font-weight: 800; color: {text_color}; line-height: 1.2; letter-spacing: -0.02em;">{title}</h4>
+{metadata_html}
+<div style="display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap;">{_get_paper_pill_html(method, accent)}</div>
+
+<details style="cursor: pointer; margin-bottom: 16px;">
+<summary style="font-size: 0.85rem; font-weight: 700; color: {accent}; margin-bottom: 8px; outline: none; list-style: none;">🔍 READ SUMMARY</summary>
+<p style="color: {muted}; font-size: 0.9rem; margin-top: 8px; line-height: 1.6; opacity: 0.95;">{summary}</p>
+</details>
+
+<div class="insight-highlights">
+<div class="insight-title">💡 KEY HIGHLIGHTS</div>
+<div class="insight-chips">{insight_chips_html}</div>
+</div>
+
+<div style="display: flex; justify-content: space-between; align-items: center; padding-top: 16px; border-top: 1px solid {border}; margin-top: auto;">
 <div style="display: flex; gap: 16px;">
-<a href="{pdf_url}" target="_blank" style="color: {accent}; text-decoration: none; font-size: 0.82rem; font-weight: 600; transition: opacity 0.2s;">📄 PDF</a>
-<a href="{scholar_url}" target="_blank" style="color: {accent}; text-decoration: none; font-size: 0.82rem; font-weight: 600; transition: opacity 0.2s;">🎓 Scholar</a>
+<a href="{pdf_url}" target="_blank" style="color: {accent}; text-decoration: none; font-size: 0.85rem; font-weight: 700; display: flex; align-items: center; gap: 4px; transition: opacity 0.2s;">
+<span style="font-size: 1rem;">📄</span> PDF
+</a>
+<a href="{scholar_url}" target="_blank" style="color: {accent}; text-decoration: none; font-size: 0.85rem; font-weight: 700; display: flex; align-items: center; gap: 4px; transition: opacity 0.2s;">
+<span style="font-size: 1rem;">🎓</span> SCHOLAR
+</a>
+</div>
+<div style="background: {accent}10; color: {accent}; padding: 4px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase;">
+ACTIVE
 </div>
 </div>
 </div>
@@ -73,12 +98,7 @@ def render_paper_card(paper: Dict, theme: str = "Dark", index: int = 0):
 
 def render_idea_card(idea: Dict, theme: str = "Dark", index: int = 0):
     """
-    Render a research idea card with pink accent and motion.
-    
-    Args:
-        idea: Idea dict with title, description, requirements
-        theme: Color theme
-        index: Card index
+    Render an enhanced research idea card with pink accent and depth indicator.
     """
     accent = "#EC4899"  # Pink for ideas
     text_color = "#F1F5F9" if theme != "Light" else "#18181B"
@@ -87,6 +107,7 @@ def render_idea_card(idea: Dict, theme: str = "Dark", index: int = 0):
     title = _sanitize(idea.get('title', 'Untitled Idea'))
     description = _sanitize(idea.get('description', ''))
     raw_requirements = idea.get('requirements', [])
+    complexity = idea.get('complexity', 'Medium')
     
     # Process requirements into tags
     if isinstance(raw_requirements, str):
@@ -96,15 +117,22 @@ def render_idea_card(idea: Dict, theme: str = "Dark", index: int = 0):
     
     req_tags_html = "".join([
         f'<span class="premium-tag" style="background: {accent}10; color: {accent}; border: 1px solid {accent}30; margin-right: 6px; margin-bottom: 4px; display: inline-block;">{_sanitize(r)}</span>'
-        for r in requirements[:4]
+        for r in requirements[:3]
     ])
     
     # CRITICAL: NO INDENTATION in the multiline string
     html = f"""
-<div class="premium-card" style="border-left: 4px solid {accent}; animation-delay: {index * 0.15}s; height: 100%; display: flex; flex-direction: column;">
-<h4 style="margin: 0 0 10px 0; font-size: 1.05rem; font-weight: 700; color: {text_color};">💡 {title}</h4>
-<p style="color: {muted}; font-size: 0.85rem; margin-bottom: 12px; line-height: 1.6; flex-grow: 1; opacity: 0.9;">{description}</p>
-<div style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px;">{req_tags_html}</div>
+<div class="premium-card" style="border-left: 5px solid {accent}; animation-delay: {index * 0.15}s; height: 100%; display: flex; flex-direction: column;">
+<div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+<h4 style="margin: 0; font-size: 1.15rem; font-weight: 800; color: {text_color}; line-height: 1.2;">💡 {title}</h4>
+<div style="background: {accent}15; color: {accent}; padding: 2px 8px; border-radius: 6px; font-size: 0.65rem; font-weight: 800;">{complexity.upper()}</div>
+</div>
+<p style="color: {muted}; font-size: 0.9rem; margin-bottom: 16px; line-height: 1.6; flex-grow: 1; opacity: 0.95;">{description}</p>
+<div class="insight-title" style="color: {accent}; margin-bottom: 8px;">🛠️ PREREQUISITES</div>
+<div style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px;">{req_tags_html}</div>
+<div style="margin-top: 16px; display: flex; align-items: center; gap: 8px; font-size: 0.75rem; color: {muted}; font-weight: 600;">
+<span style="font-size: 1rem;">🧠</span> Research Depth: High
+</div>
 </div>
 """
     st.markdown(html, unsafe_allow_html=True)
