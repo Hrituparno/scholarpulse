@@ -76,6 +76,16 @@ def get_theme_css(theme: str = "Dark") -> str:
                 to {{ transform: translateX(0); opacity: 1; }}
             }}
 
+            /* Reduced Motion Support */
+            @media (prefers-reduced-motion: reduce) {{
+                * {{
+                    animation-duration: 0.01ms !important;
+                    animation-iteration-count: 1 !important;
+                    transition-duration: 0.01ms !important;
+                    scroll-behavior: auto !important;
+                }}
+            }}
+
             /* Refined Sidebar */
             [data-testid="stSidebar"] {{
                 background: {sidebar_bg} !important;
@@ -333,6 +343,34 @@ def get_theme_css(theme: str = "Dark") -> str:
                 font-size: 0.82rem;
                 color: {text_muted};
                 max-width: 450px;
+            }}
+
+            /* Empty States */
+            .empty-state-container {{
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                padding: 60px 20px;
+                text-align: center;
+            }}
+            .empty-state-icon {{
+                font-size: 4rem;
+                margin-bottom: 24px;
+                opacity: 0.5;
+                filter: grayscale(0.5);
+            }}
+            .empty-state-title {{
+                font-size: 1.5rem;
+                font-weight: 700;
+                margin-bottom: 12px;
+                color: {text_primary};
+            }}
+            .empty-state-description {{
+                font-size: 1rem;
+                color: {text_muted};
+                max-width: 400px;
+                line-height: 1.6;
             }}
         </style>
     """)

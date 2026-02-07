@@ -105,25 +105,38 @@ def render_warning_card(title: str, message: str):
     st.markdown(html, unsafe_allow_html=True)
 
 def render_error_card(title: str, message: str, error_code: str = None, retry_callback=None):
-    """Render a premium error feedback card with optional retry."""
+    """Render a premium error feedback card with optional retry and hidden details."""
     title = _sanitize(title)
     message = _sanitize(message)
-    code_html = f"<br><code style='background: rgba(0,0,0,0.2); padding: 2px 6px; border-radius: 4px; font-size: 0.75rem;'>Code: {error_code}</code>" if error_code else ""
     
     html = f"""
 <div class="premium-card feedback-card feedback-error">
 <div class="feedback-icon">❌</div>
-<div class="feedback-content">
-<h4>{title}</h4>
-<p>{message}{code_html}</p>
+<div class="feedback-content" style="flex: 1;">
+<h4 style="color: #FCA5A5 !important; margin-bottom: 4px !important;">{title}</h4>
+<p style="margin-bottom: 0 !important;">{message}</p>
 </div>
 </div>
 """
     st.markdown(html, unsafe_allow_html=True)
     
-    if retry_callback:
-        if st.button("🔄 Try Again", help="Attempt to reconnect or restart task"):
-            retry_callback()
+    with st.expander("Technical details"):
+        if error_code:
+            st.code(f"Error Code: {error_code}", language="text")
+        st.info("System logs have captured this event for engineering review.")
+        if retry_callback:
+            st.button("🔄 Try Again", on_click=retry_callback, use_container_width=True)
+
+def render_empty_state(icon: str, title: str, description: str):
+    """Render a modern empty state for pages with no content."""
+    html = f"""
+<div class="empty-state-container">
+<div class="empty-state-icon">{icon}</div>
+<div class="empty-state-title">{title}</div>
+<div class="empty-state-description">{description}</div>
+</div>
+"""
+    st.markdown(html, unsafe_allow_html=True)
 
 def render_connection_error():
     """Specific error for backend offline state."""

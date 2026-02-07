@@ -22,6 +22,7 @@ from components.feedback import (
     render_error_card,
     render_connection_error,
     render_progress_card,
+    render_empty_state,
     _sanitize
 )
 from components.cards import render_papers_grid, render_ideas_list, render_paper_card, render_idea_card
@@ -38,13 +39,67 @@ st.set_page_config(
 API_BASE_URL = os.environ.get('SCHOLARPULSE_API_URL', 'http://localhost:8000')
 api = ScholarPulseAPI(base_url=API_BASE_URL)
 
+import json
+
+# Settings Persistence Helpers
+SETTINGS_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "user_settings.json")
+
+def load_settings():
+    """Load settings from local JSON file."""
+    defaults = {
+        "theme": "Dark",
+        "researcher_name": "Dr. Scholar",
+        "llm_provider": "Groq",
+        "search_depth": 3,
+        "concurrency": 2,
+        "tone": "Professional"
+    }
+    if os.path.exists(SETTINGS_FILE):
+        try:
+            with open(SETTINGS_FILE, "r") as f:
+                stored = json.load(f)
+                defaults.update(stored)
+        except:
+            pass
+    return defaults
+
+def save_settings():
+    """Save current session state settings to local JSON."""
+    settings = {
+        "theme": st.session_state.theme,
+        "researcher_name": st.session_state.get("researcher_name", "Dr. Scholar"),
+        "llm_provider": st.session_state.get("llm_provider", "Groq"),
+        "search_depth": st.session_state.get("search_depth", 3),
+        "concurrency": st.session_state.get("concurrency", 2),
+        "tone": st.session_state.get("tone", "Professional")
+    }
+    try:
+        with open(SETTINGS_FILE, "w") as f:
+            json.dump(settings, f)
+    except:
+        pass
+
+# Initialize settings from file
+persisted_settings = load_settings()
+
 # Session State Initialization
 if 'theme' not in st.session_state:
-    st.session_state.theme = "Dark"
+    st.session_state.theme = persisted_settings["theme"]
+if 'researcher_name' not in st.session_state:
+    st.session_state.researcher_name = persisted_settings["researcher_name"]
+if 'llm_provider' not in st.session_state:
+    st.session_state.llm_provider = persisted_settings["llm_provider"]
+if 'search_depth' not in st.session_state:
+    st.session_state.search_depth = persisted_settings["search_depth"]
+if 'concurrency' not in st.session_state:
+    st.session_state.concurrency = persisted_settings["concurrency"]
+if 'tone' not in st.session_state:
+    st.session_state.tone = persisted_settings["tone"]
+
 if 'page' not in st.session_state:
     st.session_state.page = "Dashboard"
-if 'history' not in st.session_state:
-    st.session_state.history = []
+if 'is_researching' not in st.session_state:
+    st.session_state.is_researching = False
 if 'papers_found' not in st.session_state:
     st.session_state.papers_found = 0
 if 'searches_made' not in st.session_state:
@@ -192,11 +247,19 @@ def render_dashboard():
     
     col_u1, col_u2 = st.columns([3, 1])
     with col_u1:
-        go_button = st.button("✨ START RESEARCH", use_container_width=True, disabled=not st.session_state.backend_healthy)
+        if st.session_state.is_researching:
+            go_button = st.button("✨ MISSION IN PROGRESS...", use_container_width=True, disabled=True)
+        else:
+            go_button = st.button("✨ START RESEARCH", use_container_width=True, disabled=not st.session_state.backend_healthy)
+    
     with col_u2:
         st.file_uploader("PDF_UPLOAD", type=["pdf"], label_visibility="collapsed")
 
-    if go_button and query:
+    if (go_button and query) or st.session_state.is_researching:
+        if go_button and query:
+            st.session_state.is_researching = True
+            st.rerun()
+            
         # Research Logic
         progress_container = st.empty()
         result_container = st.container()
@@ -227,13 +290,18 @@ def render_dashboard():
                 
                 # Sync fresh stats from backend
                 sync_kpis()
+                st.session_state.is_researching = False
                 
         except Exception as e:
+            st.session_state.is_researching = False
             progress_container.empty()
             render_error_card("Mission Failed", str(e))
 
-    # Demo mode if no search
-    if not go_button:
+    # Empty State or Demo mode if no search
+    if not go_button and not st.session_state.is_researching:
+        st.markdown("<div style='margin-top: 40px;'></div>", unsafe_allow_html=True)
+        render_empty_state("🚀", "Ready for Discovery?", "Enter a research query above to start your deep discovery mission.")
+        
         st.markdown("<h3 class='gradient-text' style='margin: 40px 0 20px 0;'>🛡️ Featured Insights</h3>", unsafe_allow_html=True)
         demo_papers = [
             {"title": "Multi-Agent Systems for Scientific Discovery", "summary": "How LLM agents collaborate...", "authors": ["S. Kumar", "A. Patel"], "method": "Agentic Framework", "objective": "Automate discovery"},
@@ -251,7 +319,7 @@ def render_library_page():
     try:
         tasks = api.list_tasks()
         if not tasks:
-            st.info("Your library is currently empty. Start a research mission to see it here!")
+            render_empty_state("📁", "No Research Found", "Your library is currently empty. Start a research mission to see it here!")
             return
             
         # Group by history
@@ -345,54 +413,70 @@ def render_settings_page():
         elif current_tab == "Personalization":
             render_settings_section_header("Personalization", "Customize how ScholarPulse interacts with you.")
             with render_settings_row("Researcher Name", "How should the AI address you in reports?"):
-                st.text_input("NAME", placeholder="e.g. Dr. Scholar", label_visibility="collapsed")
+                new_name = st.text_input("NAME", value=st.session_state.researcher_name, placeholder="e.g. Dr. Scholar", label_visibility="collapsed")
+                if new_name != st.session_state.researcher_name:
+                    st.session_state.researcher_name = new_name
+                    save_settings()
             with render_settings_row("Tone of Voice", "Select the preferred AI response style."):
-                st.select_slider("TONE", options=["Academic", "Professional", "Concise"], label_visibility="collapsed")
+                new_tone = st.select_slider("TONE", options=["Academic", "Professional", "Concise"], value=st.session_state.tone, label_visibility="collapsed")
+                if new_tone != st.session_state.tone:
+                    st.session_state.tone = new_tone
+                    save_settings()
 
         elif current_tab == "Research":
             render_settings_section_header("Research Configuration", "Fine-tune the deep research engine.")
             with render_settings_row("Search Depth", "Number of search iterations per query."):
-                st.slider("DEPTH", 1, 10, 3, label_visibility="collapsed")
+                new_depth = st.slider("DEPTH", 1, 10, st.session_state.search_depth, label_visibility="collapsed")
+                if new_depth != st.session_state.search_depth:
+                    st.session_state.search_depth = new_depth
+                    save_settings()
             with render_settings_row("Concurrency", "Maximum simultaneous search queries."):
-                st.number_input("CONCURRENCY", 1, 5, 2, label_visibility="collapsed")
+                new_concurrency = st.number_input("CONCURRENCY", 1, 5, st.session_state.concurrency, label_visibility="collapsed")
+                if new_concurrency != st.session_state.concurrency:
+                    st.session_state.concurrency = new_concurrency
+                    save_settings()
             with render_settings_row("Source Filtering", "Only include peer-reviewed journals."):
                 st.toggle("PEER_REVIEW", value=True, label_visibility="collapsed")
 
         elif current_tab == "Models":
             render_settings_section_header("Models & Intelligence", "Manage LLM providers and versioning.")
-            with render_settings_row("Primary Model", "Default LLM used for synthesis."):
-                st.selectbox("DEFAULT_LLM", ["Llama 3 (Groq)", "GPT-4o (Oxlo)", "Gemini 1.5 Pro"], label_visibility="collapsed")
-            with render_settings_row("Reasoning Mode", "Enable chain-of-thought processing for complex queries."):
+            with render_settings_row("Primary Provider", "Default LLM engine used for synthesis."):
+                new_provider = st.selectbox("DEFAULT_LLM", ["Groq", "Oxlo", "Gemini"], index=["Groq", "Oxlo", "Gemini"].index(st.session_state.llm_provider), label_visibility="collapsed")
+                if new_provider != st.session_state.llm_provider:
+                    st.session_state.llm_provider = new_provider
+                    save_settings()
+            with render_settings_row("Reasoning Mode", "Enable chain-of-thought processing."):
                 st.toggle("CoT", value=True, label_visibility="collapsed")
             with render_settings_row("Provider API Key", "Manage your custom provider credentials."):
                 st.button("🔑 CONFIGURE KEYS", use_container_width=True)
 
         elif current_tab == "Notifications":
             render_settings_section_header("Notifications", "Control how you receive mission updates.")
-            with render_settings_row("Desktop Alerts", "Show browser notifications when a task completes."):
+            with render_settings_row("Desktop Alerts", "Show browser notifications on completion."):
                 st.toggle("DESKTOP_NOTIF", value=True, label_visibility="collapsed")
-            with render_settings_row("Email Summaries", "Receive a PDF export of your research via email."):
+            with render_settings_row("Email Summaries", "Receive PDF exports via email."):
                 st.toggle("EMAIL_NOTIF", label_visibility="collapsed")
 
         elif current_tab == "Privacy":
-            render_settings_section_header("Data & Privacy", "Control your research footprint and data.")
-            with render_settings_row("Training Opt-out", "Do not use my research data for future model training."):
+            render_settings_section_header("Data & Privacy", "Control your research footprint.")
+            with render_settings_row("Training Opt-out", "Do not use my data for model training."):
                 st.toggle("OPT_OUT", value=True, label_visibility="collapsed")
-            with render_settings_row("Export Library", "Download all your research history as JSON."):
+            with render_settings_row("Export Library", "Download history as JSON."):
                 st.button("📥 EXPORT ALL", use_container_width=True)
             with render_settings_row("Clear History", "Permanently delete all past research tasks."):
                 st.button("🗑️ PURGE DATA", use_container_width=True, type="primary")
 
         elif current_tab == "Appearance":
-            render_settings_section_header("Appearance", "Customize the look and feel of your dashboard.")
+            render_settings_section_header("Appearance", "Customize the look and feel.")
             with render_settings_row("Interface Theme", "Switch between visual modes."):
                 new_theme = st.radio("THEME_SELECT", ["Dark", "Night", "Light"], 
                                      index=["Dark", "Night", "Light"].index(st.session_state.theme),
                                      horizontal=True, label_visibility="collapsed")
                 if new_theme != st.session_state.theme:
                     st.session_state.theme = new_theme
+                    save_settings()
                     st.rerun()
-            with render_settings_row("Reduced Motion", "Minimize animations for better performance."):
+            with render_settings_row("Reduced Motion", "Minimize animations for performance."):
                 st.toggle("LOW_MOTION", label_visibility="collapsed")
 
         st.markdown('</div>', unsafe_allow_html=True)

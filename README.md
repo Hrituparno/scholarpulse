@@ -1,70 +1,69 @@
-# 🌌 ScholarPulse: Noir Edition
+# 🧠 ScholarPulse: AI Research Agent
 
-### **Mind-Boggling AI Research Agent with Professional Material Dashboards**
+**Accelerating Discoveries with Collaborative Multi-Agent Intelligence.**
 
-ScholarPulse is a next-generation AI research assistant designed to transform the academic and industrial discovery process. Featuring a sophisticated **Neon Noir** interface, it combines deep literature analysis, hypothesis generation, and experimental design into a single, high-performance command center.
-
-![ScholarPulse Dashboard](https://raw.githubusercontent.com/ScholarPulse/Assets/main/Banner.png) *Visual Prototype for GitHub*
+ScholarPulse is an enterprise-grade AI research platform designed to transform complex queries into structured intelligence. By leveraging a distributed architecture and a premium SaaS-inspired interface, it provides researchers with a polished, high-performance dashboard for deep scientific discovery.
 
 ---
 
-## 💎 Features
+## ✨ Key Features
 
-- **🏛️ Industrial Command Center**: Multi-mode dashboard including "Deep Research", "Web Search", and "Study & Learn".
-- **🌌 Neon Noir Aesthetics**: High-end Material Design architecture with Neon Green (Dark) and Neon Blue (Night) themes.
-- **📈 Professional Discovery Cards**: Visual research findings with high-end imagery, abstract analysis, and direct source linking.
-- **📜 Past Intel Tracking**: Integrated session history to monitor your research progression.
-- **🧠 Multi-Think Engine**: Powered by Groq, Gemini, and Oxlo for extreme inference speeds.
-- **📄 Full Intelligence Reports**: Automates the generation of Word (.docx), Plain Text, and Markdown reports.
+- **🚀 Deep Discovery Missions**: Multi-agent search and synthesis engine for exhaustive research.
+- **📑 Persistent Library**: Every mission is stored in a structured history for lifetime access.
+- **📊 Real-time KPIs**: Direct database aggregation of research impact metrics (Papers found, Searches, Reports).
+- **⚙️ Premium Settings**: ChatGPT-inspired split-pane configuration for themes, models, and researcher identity.
+- **🎨 Elite SaaS UI**: Aurora Minimal palette with advanced motion, bento-style cards, and glassmorphism.
+- **🔒 Privacy First**: Training opt-out controls and persistent local configuration.
 
 ---
 
-## 🚀 Quick Start
+## 🏗️ Architecture
 
-### 1. Requirements
-Ensure you have Python 3.9+ and the required APIs:
-- **Groq** (Primary Intelligence)
-- **Serper** (Web Search)
-- **Gemini** (Vision & Synthesis)
-- **Oxlo** (Alternative High-End Inference)
+ScholarPulse utilizes a modern, distributed architecture for scalability and clean separation of concerns.
 
-### 2. Installation
-```powershell
-# Clone the repository
-git clone https://github.com/yourusername/ScholarPulse.git
-cd ScholarPulse
-
-# Install dependencies
-pip install -r requirements.txt
+```mermaid
+graph TD
+    User([User]) <--> Frontend[Streamlit Frontend]
+    Frontend <--> APIClient[API Client]
+    APIClient <--> Backend[Django REST Backend]
+    Backend <--> DB[(SQLite Database)]
+    Backend <--> Services[Research Service Layer]
+    Services <--> Agents[AI Agent Core]
+    Agents <--> LLM[LLM Providers: Groq, Gemini, Oxlo]
 ```
 
-### 3. Execution
-```powershell
-# Run the Neon Noir UI
-streamlit run app.py
-```
+- **Frontend**: Streamlit + Custom CSS (Vite/SaaS-style aesthetics).
+- **Backend**: Django REST Framework (Task management, API endpoints).
+- **Storage**: SQLite for persistence and aggregated KPIs.
+- **Intelligence**: Multi-provider LLM orchestration for deep reasoning.
 
 ---
 
-## 🎨 Themes & UI
+## 🚀 Getting Started
 
-ScholarPulse comes with three hand-crafted themes:
-- **Dark Mode**: Features glowing **39FF14 (Neon Green)** accents for high-focus sessions.
-- **Night Mode**: Features deep **00D2FF (Neon Blue)** highlights for calm, extended research.
-- **Light Mode**: A clean, professional Material vibe for standard environments.
+### Prerequisites
+- Python 3.9+
+- Django 5.0+
 
----
+### One-Step Launch
+We've provided automated batch scripts to simplify the startup process:
 
-## 🛠️ Stack
-
-- **Frontend**: Streamlit + Vanilla CSS + Glassmorphism
-- **Backend**: Python 3.10
-- **AI Layers**: LangChain, LLMs (Llama-3, Qwen, Gemini)
-- **Data Sources**: arXiv API, Serper Google Search
+1. **Launch Everything**: Run `start_scholarpulse.bat` to initialize the database, install dependencies, and start both servers.
+2. **Access the Dashboard**: Open `http://localhost:8501` in your browser.
+3. **Backend Admin**: Managed at `http://localhost:8000/admin`.
 
 ---
 
-## ⚖️ License
-MIT License | 2026 Production Ready
+## 🛠️ Engineering Highlights
 
-*Designed by the Google DeepMind Advanced Agentic Coding Team.*
+- **API-First Design**: The frontend is entirely decoupled, communicating with the backend via a specialized `ScholarPulseAPI` client.
+- **Stateful Persistence**: Settings survive page refreshes through local JSON serialization (`user_settings.json`).
+- **Motion-Enhanced UX**: Custom CSS transitions, pulsing glows, and `@media (prefers-reduced-motion)` support for accessibility.
+- **Robust Error Handling**: Friendly error cards with hidden technical details and centralized backend logging.
+
+---
+
+## ❄️ Project Status: v1.0 Frozen
+ScholarPulse has reached a stable v1.0 milestone. All core architectural and UI features are complete. Future iterations may include Celery for background task queuing and advanced PDF vectorization.
+
+**Built with ❤️ for Modern Researchers.**
