@@ -36,8 +36,7 @@ st.set_page_config(
 )
 
 # Initialize API client
-API_BASE_URL = os.environ.get('SCHOLARPULSE_API_URL', 'http://localhost:8000')
-api = ScholarPulseAPI(base_url=API_BASE_URL)
+api = ScholarPulseAPI()
 
 import json
 

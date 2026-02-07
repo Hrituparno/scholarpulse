@@ -16,7 +16,12 @@ SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'dev-secret-key-change-in-produ
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DJANGO_DEBUG', 'True').lower() == 'true'
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', '*']
+ALLOWED_HOSTS = [
+    'localhost', 
+    '127.0.0.1', 
+    '.onrender.com',  # Render production domain
+    '0.0.0.0'
+]
 
 # Application definition
 INSTALLED_APPS = [
@@ -39,6 +44,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',  # Must be first
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # For serving static files in production
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -99,6 +105,8 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
@@ -121,8 +129,10 @@ REST_FRAMEWORK = {
 
 # CORS Configuration - Allow Streamlit frontend
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:8501",  # Streamlit default
+    "http://localhost:8501",  # Local development
     "http://127.0.0.1:8501",
+    "https://scholarpulse.streamlit.app",  # Streamlit Cloud
+    "https://share.streamlit.io",
 ]
 CORS_ALLOW_CREDENTIALS = True
 

@@ -54,6 +54,21 @@ We've provided automated batch scripts to simplify the startup process:
 
 ---
 
+## ☁️ Cloud Deployment (No Docker)
+
+ScholarPulse is optimized for high-performance hosting on standard Python platforms.
+
+### 1. Backend (Django) on Render.com
+- **Build Command**: `pip install -r requirements.txt && python backend/manage.py migrate`
+- **Start Command**: `gunicorn scholarpulse.wsgi --chdir backend --bind 0.0.0.0:$PORT`
+- **Env Vars**: Set `GROQ_API_KEY`, `DJANGO_SECRET_KEY`, and `DJANGO_DEBUG=False`.
+
+### 2. Frontend (Streamlit) on Streamlit Cloud
+- **Main File**: `frontend/app.py`
+- **Env Vars**: Set `SCHOLARPULSE_API_URL` to your Render backend URL.
+
+---
+
 ## 🛠️ Engineering Highlights
 
 - **API-First Design**: The frontend is entirely decoupled, communicating with the backend via a specialized `ScholarPulseAPI` client.
