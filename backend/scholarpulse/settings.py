@@ -17,9 +17,9 @@ SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'dev-secret-key-change-in-produ
 DEBUG = os.environ.get('DJANGO_DEBUG', 'True').lower() == 'true'
 
 ALLOWED_HOSTS = [
-    'localhost', 
-    '127.0.0.1', 
-    '.onrender.com',  # Render production domain
+    'localhost',
+    '127.0.0.1',
+    '.onrender.com',  # Allows all Render domains
     '0.0.0.0'
 ]
 
@@ -129,10 +129,15 @@ REST_FRAMEWORK = {
 
 # CORS Configuration - Allow Streamlit frontend
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:8501",  # Local development
+    "http://localhost:8501",
     "http://127.0.0.1:8501",
-    "https://scholarpulse.streamlit.app",  # Streamlit Cloud
+    "https://scholarpulse.streamlit.app",
     "https://share.streamlit.io",
+]
+
+# Use regex to allow any streamlit sub-domain (Essential for Streamlit Cloud)
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    r"^https://.*\.streamlit\.app$",
 ]
 CORS_ALLOW_CREDENTIALS = True
 
