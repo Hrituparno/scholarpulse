@@ -63,7 +63,7 @@ class ScholarPulseAPI:
     def __init__(self, base_url: Optional[str] = None):
         # Default to environment variable or localhost
         import os
-        self.base_url = (base_url or os.environ.get('SCHOLARPULSE_API_URL', 'http://localhost:8000')).rstrip('/')
+        self.base_url = (base_url or os.environ.get('SCHOLARPULSE_API_URL', 'https://scholarpulse.onrender.com')).rstrip('/')
         self.session = requests.Session()
         self.session.headers.update({
             'Content-Type': 'application/json',
