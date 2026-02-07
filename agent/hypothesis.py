@@ -29,6 +29,8 @@ class HypothesisGenerator:
             2. Description (3-4 sentences detailing the methodology and why it's novel)
             3. Detailed Requirements (Hardware, specific Python libraries, and datasets)
 
+            STRICT RULE: Your output values must NOT contain any HTML tags, CSS styles, or Markdown formatting (like bold, links, or backticks). Provide raw text ONLY.
+
             Output strictly as a JSON list of objects:
             [
               {{
@@ -100,6 +102,8 @@ class HypothesisGenerator:
                - Synthesize the findings into a coherent future vision.
                - Predict the long-term trajectory of this specific research path.
                - Offer a visionary outlook on how this field will transform in the next 5-10 years.
+
+            STRICT RULE: Your output values must NOT contain any HTML tags, CSS styles, or Markdown formatting (like bold, links, or backticks). Provide raw text ONLY.
 
             Output strictly as a JSON object:
             {{

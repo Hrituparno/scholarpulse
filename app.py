@@ -238,205 +238,63 @@ def get_theme_css(theme):
 def render_kpi_card(label, value, icon, accent_color):
     """Modern Bento-style KPI card with gradient accent."""
     return f"""
-    <div class="kpi-card">
-        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-            <div>
-                <div style="font-size: 0.75rem; color: #94A3B8; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px; margin-bottom: 8px;">{label}</div>
-                <div style="font-size: 2rem; font-weight: 700; background: linear-gradient(135deg, #6366F1, #8B5CF6); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">{value}</div>
-            </div>
-            <div style="font-size: 2rem; opacity: 0.6;">{icon}</div>
-        </div>
+    <div class="kpi-card" style="display: block; padding: 20px;">
+        <div style="font-size: 0.75rem; color: #94A3B8; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px; margin-bottom: 8px;">{label}</div>
+        <div style="font-size: 1.8rem; font-weight: 700; margin-bottom: 8px;">{value}</div>
+        <div style="font-size: 1.5rem; opacity: 0.6;">{icon}</div>
     </div>
     """
 
 
 def render_result_card(title, summary, link, authors=None, paper_data=None):
-    """Sophisticated result card with advanced features."""
-    import re
-    import urllib.parse
-    import random
-    
-    # Aurora palette accents
+    """Simplified result card with essential features."""
     accent = "#8B5CF6" if st.session_state.theme == "Dark" else "#6366F1" if st.session_state.theme == "Night" else "#7C3AED"
-    secondary = "#EC4899"  # Pink for highlights
     
-    # Calculate reading time (approx 200 words/min academic reading)
-    word_count = len(summary.split())
-    reading_time = max(2, word_count // 50)  # Estimate based on summary length ratio
-    
-    # Generate relevance score (deterministic based on title)
-    relevance_score = 75 + (len(title) % 25)  # 75-99%
-    
-    # Extract topic tags from title/summary
-    tech_keywords = ['machine', 'learning', 'neural', 'deep', 'ai', 'artificial', 'network', 'transformer', 
-                     'language', 'model', 'algorithm', 'data', 'optimization', 'classification', 'detection',
-                     'vision', 'nlp', 'reinforcement', 'graph', 'attention', 'generative']
-    found_tags = []
-    combined_text = (title + " " + summary).lower()
-    for kw in tech_keywords:
-        if kw in combined_text and len(found_tags) < 3:
-            found_tags.append(kw.capitalize())
-    if not found_tags:
-        found_tags = ["Research", "AI"]
-    
-    # Publication type indicator
-    pub_types = ["📄 Paper", "📚 Journal", "🎓 Conference", "🔬 Preprint"]
-    pub_type = pub_types[len(title) % 4]
-    
-    # Extract keywords for hover tooltips
-    stopwords = {'with', 'from', 'that', 'this', 'have', 'will', 'been', 'were', 'their', 'what', 'there', 'about', 'which', 'when', 'make', 'like', 'into', 'just', 'over', 'such', 'through', 'using', 'based', 'approach', 'method', 'study', 'analysis', 'paper', 'research'}
-    words = re.findall(r'\b[A-Za-z]{4,}\b', title)
-    keywords = [w for w in words if w.lower() not in stopwords][:3]
-    
-    # Create title with hoverable keywords
-    title_html = title
-    for kw in keywords:
-        search_url = f"https://www.google.com/search?q={urllib.parse.quote(kw + ' research')}"
-        keyword_span = f'''<span class="keyword-hover">{kw}<span class="keyword-tooltip">🔍 <a href="{search_url}" target="_blank">Search "{kw}"</a></span></span>'''
-        title_html = title_html.replace(kw, keyword_span, 1)
-    
-    # Generate deterministic image
-    img_seed = len(title) % 10
-    research_images = [
-        "https://images.unsplash.com/photo-1485827404703-89b55fcc595e?auto=format&fit=crop&w=800&q=80",
-        "https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=800&q=80",
-        "https://images.unsplash.com/photo-1507413245164-6160d8298b31?auto=format&fit=crop&w=800&q=80",
-        "https://images.unsplash.com/photo-1531297484001-80022131f5a1?auto=format&fit=crop&w=800&q=80",
-        "https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=800&q=80",
-        "https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=800&q=80",
-        "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=800&q=80",
-        "https://images.unsplash.com/photo-1558494949-ef010958d684?auto=format&fit=crop&w=800&q=80",
-        "https://images.unsplash.com/photo-1532094349884-543bc11b234d?auto=format&fit=crop&w=800&q=80",
-        "https://images.unsplash.com/photo-1620712943543-bcc4628c9757?auto=format&fit=crop&w=800&q=80"
-    ]
-    img_url = research_images[img_seed]
-    
-    # Generate tags HTML
-    tags_html = " ".join([f'<span style="background: {accent}15; color: {accent}; padding: 4px 10px; border-radius: 6px; font-size: 0.65rem; font-weight: 600;">{tag}</span>' for tag in found_tags])
-
-    return f"""
-    <style>
-        .keyword-hover {{
-            position: relative;
-            cursor: help;
-            border-bottom: 1px dashed {accent}50;
-            transition: all 0.2s;
-        }}
-        .keyword-hover:hover {{
-            color: {accent};
-            border-bottom-color: {accent};
-        }}
-        .keyword-tooltip {{
-            position: absolute;
-            bottom: 100%;
-            left: 50%;
-            transform: translateX(-50%) translateY(-5px);
-            background: linear-gradient(135deg, #1E1E3F, #2D2D5A);
-            color: #F1F5F9;
-            padding: 8px 12px;
-            border-radius: 8px;
-            font-size: 0.7rem;
-            white-space: nowrap;
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.2s ease;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-            z-index: 100;
-            border: 1px solid {accent}30;
-        }}
-        .keyword-hover:hover .keyword-tooltip {{
-            opacity: 1;
-            visibility: visible;
-            transform: translateX(-50%) translateY(-8px);
-        }}
-        .keyword-tooltip a {{
-            color: {accent};
-            text-decoration: none;
-        }}
-        .bookmark-btn {{
-            transition: all 0.2s ease;
-            cursor: pointer;
-        }}
-        .bookmark-btn:hover {{
-            transform: scale(1.2);
-        }}
-    </style>
-    <div class="result-card">
-        <!-- Header with Image and Bookmark -->
-        <div style="position: relative; width: 100%; height: 130px; border-radius: 14px; overflow: hidden; margin-bottom: 14px;">
-            <img src="{img_url}" 
-                 onerror="this.src='https://images.unsplash.com/photo-1620712943543-bcc4628c9757?auto=format&fit=crop&w=800&q=80'"
-                 style="width: 100%; height: 100%; object-fit: cover; opacity: 0.85;" 
-                 class="card-img">
-            <!-- Bookmark Button -->
-            <div class="bookmark-btn" style="position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.6); backdrop-filter: blur(10px); padding: 8px 10px; border-radius: 8px; font-size: 1rem;" title="Save for later">
-                🔖
-            </div>
-            <!-- Publication Type Badge -->
-            <div style="position: absolute; bottom: 10px; left: 10px; background: rgba(0,0,0,0.7); backdrop-filter: blur(10px); padding: 5px 10px; border-radius: 6px; font-size: 0.7rem; color: #F1F5F9;">
-                {pub_type}
-            </div>
-        </div>
-        
-        <!-- Meta Row: Tags + Reading Time -->
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
-            <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-                {tags_html}
-            </div>
-            <span style="color: #64748B; font-size: 0.7rem; display: flex; align-items: center; gap: 4px;">
-                ⏱️ {reading_time} min read
-            </span>
-        </div>
-        
-        <!-- Title with Hoverable Keywords -->
-        <div style="margin: 0 0 10px 0; font-size: 1.05rem; line-height: 1.5; font-weight: 600; color: #F1F5F9;">{title_html}</div>
-        
-        <!-- Summary -->
-        <p style="font-size: 0.82rem; color: #94A3B8; margin: 0 0 14px 0; line-height: 1.55; height: 3em; overflow: hidden;">{summary[:140]}...</p>
-        
-        <!-- Relevance Score Bar -->
-        <div style="margin-bottom: 14px;">
-            <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
-                <span style="font-size: 0.7rem; color: #64748B;">Relevance Score</span>
-                <span style="font-size: 0.7rem; color: {accent}; font-weight: 600;">{relevance_score}%</span>
-            </div>
-            <div style="height: 4px; background: {accent}20; border-radius: 4px; overflow: hidden;">
-                <div style="width: {relevance_score}%; height: 100%; background: linear-gradient(90deg, {accent}, {secondary}); border-radius: 4px;"></div>
-            </div>
-        </div>
-        
-        <!-- Footer: Author + Action -->
-        <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 12px; border-top: 1px solid rgba(100,100,100,0.1);">
-            <span style="color: #64748B; font-size: 0.75rem; font-weight: 500;">{authors[0] if authors else 'AI Intelligence'}</span>
-            <a href="{link}" target="_blank" style="text-decoration: none; color: {accent}; font-weight: 600; font-size: 0.8rem; display: flex; align-items: center; gap: 6px;">
-                <span>Read More</span>
-                <span style="font-size: 1rem;">→</span>
-            </a>
-        </div>
-    </div>
-    """
+    # Use st.container instead of pure HTML for better rendering
+    with st.container(border=True):
+        col1, col2 = st.columns([1, 3])
+        with col1:
+            st.image("https://images.unsplash.com/photo-1507413245164-6160d8298b31?auto=format&fit=crop&w=200&q=80", use_column_width=True)
+        with col2:
+            st.subheader(title, divider="gray")
+            st.write(summary[:150] + "...")
+            author_text = f"**{authors[0]}**" if authors else "**Research Paper**"
+            st.caption(f"{author_text} | [Read More]({link})")
+    return None
 
 
 # Handle Session State for History & KPIs & Analytics
 import datetime
 import time
 if "history" not in st.session_state: st.session_state.history = []
-if "kpi_tasks" not in st.session_state: st.session_state.kpi_tasks = "125"
-if "kpi_tickets" not in st.session_state: st.session_state.kpi_tickets = "257"
-if "kpi_comments" not in st.session_state: st.session_state.kpi_comments = "243"
-if "kpi_visitors" not in st.session_state: st.session_state.kpi_visitors = "1225"
+if "papers_found" not in st.session_state: st.session_state.papers_found = 0
+if "searches_made" not in st.session_state: st.session_state.searches_made = 0
+if "reports_generated" not in st.session_state: st.session_state.reports_generated = 0
 if "session_start" not in st.session_state: st.session_state.session_start = time.time()
-if "intensity_data" not in st.session_state: st.session_state.intensity_data = [10, 15, 8, 22, 18, 25, 30] # Static seed, dynamic growth
+if "active_tool" not in st.session_state: st.session_state.active_tool = None
 
-# Calculate Screen Time
+# Calculate Session Uptime
 elapsed_sec = int(time.time() - st.session_state.session_start)
-hrs, rem = divmod(elapsed_sec, 3600)
-mins, secs = divmod(rem, 60)
-screen_time_str = f"{hrs:02d}:{mins:02d}:{secs:02d}"
+mins, secs = divmod(elapsed_sec, 60)
+uptime_str = f"{mins}m {secs}s"
 
 # Apply Theme CSS
 st.markdown(get_theme_css(st.session_state.theme), unsafe_allow_html=True)
 accent = "#8B5CF6" if st.session_state.theme == "Dark" else "#6366F1" if st.session_state.theme == "Night" else "#7C3AED"
+
+# 1. Process Logic FIRST (to update session state for sidebar)
+search_triggered = False
+if "go_button_held" not in st.session_state: st.session_state.go_button_held = False
+
+# Sidebar Tools Logic
+if st.session_state.active_tool == "Summarize PDF":
+    tool_instruction = "Upload a PDF below to generate a concise intelligence summary."
+elif st.session_state.active_tool == "Compare Papers":
+    tool_instruction = "Enter multiple queries or upload papers to compare research trajectories."
+elif st.session_state.active_tool == "Generate Ideas":
+    tool_instruction = "Describe your research area to generate novel hypotheses."
+else:
+    tool_instruction = "Ready to push the boundaries of science today?"
 
 # Modern Navbar
 st.markdown(f"""
@@ -446,14 +304,18 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 # Sidebar Evolution
+# Get theme-adaptive text color
+text_color = "#18181B" if st.session_state.theme == "Light" else "#F1F5F9"
+muted_color = "#52525B" if st.session_state.theme == "Light" else "#94A3B8"
+
 with st.sidebar:
     # Modern Profile Card
     st.markdown(f"""
     <div style='padding: 20px; display: flex; align-items: center; gap: 14px; margin-bottom: 24px;'>
         <div style="width: 48px; height: 48px; border-radius: 12px; background: linear-gradient(135deg, #6366F1, #8B5CF6); display: flex; align-items: center; justify-content: center; font-size: 1.4rem;">🧠</div>
         <div>
-            <div style="font-weight: 600; font-size: 1rem; color: #F1F5F9;">ScholarPulse</div>
-            <div style="font-size: 0.75rem; color: #94A3B8;">AI Research Agent</div>
+            <div style="font-weight: 600; font-size: 1rem; color: {text_color};">ScholarPulse</div>
+            <div style="font-size: 0.75rem; color: {muted_color};">AI Research Agent</div>
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -461,154 +323,226 @@ with st.sidebar:
     st.markdown(f"<div class='nav-item nav-active'>📂 Dashboard</div>", unsafe_allow_html=True)
     
     st.divider()
-    st.markdown("### 🛠️ Configuration")
+    st.markdown(f"<p style='font-weight: 600; color: {text_color}; margin-bottom: 10px;'>🛠️ Configuration</p>", unsafe_allow_html=True)
     provider = st.selectbox("Intelligence", ["Groq", "Oxlo", "Gemini"], index=0)
     mode_val = st.selectbox("Research Mode", ["Deep Research", "Web Search", "Study & Learn"], index=0)
-    year_val = st.number_input("Year Filter (0 = All)", min_value=0, max_value=2026, value=2024)
+    year_val = st.number_input("Year Filter (0 = All)", min_value=0, max_value=2027, value=2024)
     
     st.divider()
-    st.markdown("### 📜 Past Intel (History)")
+    st.markdown(f"<p style='font-weight: 600; color: {text_color}; margin-bottom: 10px;'>🔧 AI Tools</p>", unsafe_allow_html=True)
+    
+    if st.sidebar.button("📝 Summarize PDF", use_container_width=True):
+        st.session_state.active_tool = "Summarize PDF"
+        st.toast("Summarize PDF tool activated!")
+        
+    if st.sidebar.button("🔍 Compare Papers", use_container_width=True):
+        st.session_state.active_tool = "Compare Papers"
+        st.toast("Compare Papers tool activated!")
+        
+    if st.sidebar.button("💡 Generate Ideas", use_container_width=True):
+        st.session_state.active_tool = "Generate Ideas"
+        st.toast("Idea Generator activated!")
+        
+    if st.sidebar.button("📊 Citation Finder", use_container_width=True):
+        st.session_state.active_tool = "Citation Finder"
+        st.toast("Citation Finder activated!")
+
+    
+    st.divider()
+    st.markdown(f"<p style='font-weight: 600; color: {text_color}; margin-bottom: 10px;'>📜 Recent Searches</p>", unsafe_allow_html=True)
     if st.session_state.history:
         for item in reversed(st.session_state.history[-5:]):
-            st.markdown(f"<div class='history-item'>{item['query'][:30]}...<br><span style='font-size: 0.7rem; opacity: 0.5;'>{item['time']}</span></div>", unsafe_allow_html=True)
+            st.markdown(f"""
+            <div style="padding: 10px 12px; background: {accent}08; border-radius: 8px; margin-bottom: 6px; border-left: 3px solid {accent};">
+                <div style="font-size: 0.85rem; color: {text_color}; font-weight: 500;">{item['query'][:35]}...</div>
+                <div style="font-size: 0.7rem; color: {muted_color};">✓ Completed · {item['time']}</div>
+            </div>
+            """, unsafe_allow_html=True)
     else:
-        st.markdown("<p style='font-size: 0.8rem; opacity: 0.5; padding: 0 15px;'>No previous history available.</p>", unsafe_allow_html=True)
+        st.markdown(f"<p style='font-size: 0.85rem; color: {muted_color}; padding: 10px;'>No searches yet. Start researching!</p>", unsafe_allow_html=True)
 
     st.divider()
-    st.markdown("### 📊 Usage Analytics")
-    # Screen Time Metric
-    st.markdown(f"""
-    <div style='background: {accent}11; padding: 15px; border-radius: 12px; border: 1px solid {accent}33; margin: 10px;'>
-        <div style='font-size: 0.7rem; color: #888; text-transform: uppercase; font-weight: 700;'>Total Screen Time</div>
-        <div style='font-size: 1.4rem; font-weight: 800; color: {accent}; letter-spacing: 2px;'>{screen_time_str}</div>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    # Research Intensity Graph
-    import pandas as pd
-    chart_data = pd.DataFrame(st.session_state.intensity_data, columns=['Intensity'])
-    st.sidebar.area_chart(chart_data, color=accent, use_container_width=True)
-    st.markdown("<p style='font-size: 0.65rem; color: #666; text-align: center; margin-top: -10px;'>Research Intensity over Time</p>", unsafe_allow_html=True)
-
-    st.divider()
-    st.markdown("### 🎨 Aesthetics")
-    new_theme = st.selectbox("Interface Theme", ["Dark", "Night", "Light"], index=["Dark", "Night", "Light"].index(st.session_state.theme))
+    st.markdown(f"<p style='font-weight: 600; color: {text_color}; margin-bottom: 10px;'>🎨 Theme</p>", unsafe_allow_html=True)
+    new_theme = st.selectbox("Interface Theme", ["Dark", "Night", "Light"], index=["Dark", "Night", "Light"].index(st.session_state.theme), label_visibility="collapsed")
     if new_theme != st.session_state.theme:
         st.session_state.theme = new_theme
         st.rerun()
 
-# Main Dashboard Layout
-st.markdown(f"<h1 style='margin-bottom: 8px; font-weight: 700; font-size: 2rem;'>Welcome back</h1>", unsafe_allow_html=True)
-st.markdown(f"<p style='color: #94A3B8; margin-bottom: 32px; font-size: 1rem;'>What would you like to research today?</p>", unsafe_allow_html=True)
+# Main Dashboard Content
+content_container = st.container()
 
-# KPI Row (Neon)
-kpi_area = st.empty()
-def update_kpi_row():
-    with kpi_area.container():
-        kpi_col1, kpi_col2, kpi_col3, kpi_col4 = st.columns(4)
-        with kpi_col1: st.markdown(render_kpi_card("Discoveries", st.session_state.kpi_tasks, "🔥", accent), unsafe_allow_html=True)
-        with kpi_col2: st.markdown(render_kpi_card("Records", st.session_state.kpi_tickets, "📈", accent), unsafe_allow_html=True)
-        with kpi_col3: st.markdown(render_kpi_card("Insights", st.session_state.kpi_comments, "🧠", accent), unsafe_allow_html=True)
-        with kpi_col4: st.markdown(render_kpi_card("Security", "Active", "🛡️", accent), unsafe_allow_html=True)
+# Sidebar (This will now see updated session state because it's after the navbar BUT we can move the action logic higher)
+# Actually, Streamlit reruns the whole script. 
+# The best way to make the sidebar see the NEW history is to detect the button click *before* the sidebar block.
 
-update_kpi_row()
+# --- Action Detection ---
+go_clicked = False # Placeholder
+# Actually, we can use a trick: check the button state here if it was set in a previous run or use a form.
+# But for now, let's just make the sidebar render last or use a placeholder for it.
+# Streamlit usually prefers sidebar first for layout.
+# We'll stick to the current order but use st.rerun() if we need the sidebar to update immediately after a state change.
 
-# Research Input Area (Modern Card)
-with st.container():
-    st.markdown(f"<div style='background: rgba(99, 102, 241, 0.05); padding: 28px; border-radius: 16px; border: 1px solid rgba(99, 102, 241, 0.1); margin-top: 16px;'>", unsafe_allow_html=True)
-    query = st.text_input("QUERY_INPUT", placeholder="Enter your research query...", label_visibility="collapsed")
-    col_u1, col_u2 = st.columns([2, 1])
-    with col_u1:
-        go_button = st.button("✨ Start Research", width="stretch")
-    with col_u2:
-        uploaded_file = st.file_uploader("PDF_UPLOAD", type=["pdf"], label_visibility="collapsed")
-    st.markdown("</div>", unsafe_allow_html=True)
+with content_container:
+    if st.session_state.active_tool:
+        st.markdown(f"""
+        <div style="background: {accent}1a; padding: 24px; border-radius: 16px; border: 1px solid {accent}30; margin-bottom: 32px; animation: fadeInUp 0.5s ease;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <h3 style="margin: 0; color: {accent}; font-size: 1.25rem; font-weight: 700;">🛠️ {st.session_state.active_tool}</h3>
+                    <p style="margin: 8px 0 0 0; font-size: 0.95rem; color: {text_color}; opacity: 0.8;">{tool_instruction}</p>
+                </div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        if st.button("✕ Exit Tool Mode", key="close_tool_mode"):
+            st.session_state.active_tool = None
+            st.rerun()
 
-st.divider()
+    st.markdown(f"<h1 style='margin-bottom: 8px; font-weight: 700; font-size: 2.2rem; color: {text_color};'>Welcome back</h1>", unsafe_allow_html=True)
+    st.markdown(f"<p style='color: {muted_color}; margin-bottom: 32px; font-size: 1.1rem;'>How can I advance your research today?</p>", unsafe_allow_html=True)
 
-# Results Area
-status_area = st.empty()
+    # KPI Row (Live Stats)
+    kpi_col1, kpi_col2, kpi_col3, kpi_col4 = st.columns(4)
+    with kpi_col1: 
+        st.markdown(render_kpi_card("Papers Found", str(st.session_state.papers_found), "📄", accent), unsafe_allow_html=True)
+    with kpi_col2: 
+        st.markdown(render_kpi_card("Searches", str(st.session_state.searches_made), "🔍", accent), unsafe_allow_html=True)
+    with kpi_col3: 
+        st.markdown(render_kpi_card("Reports", str(st.session_state.reports_generated), "📊", accent), unsafe_allow_html=True)
+    with kpi_col4: 
+        st.markdown(render_kpi_card("Uptime", uptime_str, "⏱️", accent), unsafe_allow_html=True)
 
-if go_button:
-    if not query and not uploaded_file:
-        st.warning("Please enter a query or upload a file.")
-    else:
-        # Modern Loading State
-        with st.container():
-            st.markdown(f"<p style='color: {accent}; text-align: center; font-weight: 600; letter-spacing: 1px; margin-bottom: 16px;'>Analyzing your research query...</p>", unsafe_allow_html=True)
-            progress_bar = st.progress(0)
-            for i in range(101):
-                import time
-                time.sleep(0.008)
-                progress_bar.progress(i)
+    # Research Input Area
+    with st.container():
+        st.markdown(f"<div style='background: {accent}08; padding: 32px; border-radius: 20px; border: 1px solid {accent}15; margin-top: 24px;'>", unsafe_allow_html=True)
         
-        # Save to History
-        st.session_state.history.append({
-            "query": query if query else "PDF Analysis",
-            "time": datetime.datetime.now().strftime("%H:%M:%S")
-        })
+        # Tool-specific placeholders
+        placeholder_text = "What would you like to research?"
+        if st.session_state.active_tool == "Summarize PDF": placeholder_text = "Analysis target (e.g., 'Core findings of this paper')"
+        elif st.session_state.active_tool == "Compare Papers": placeholder_text = "Topics to compare (e.g., 'Transformer vs State Space models')"
+        elif st.session_state.active_tool == "Generate Ideas": placeholder_text = "Research area (e.g., 'Scalable LLM training')"
         
-        # Increment Intensity Chart
-        import random
-        st.session_state.intensity_data.append(st.session_state.intensity_data[-1] + random.randint(5, 15))
-        if len(st.session_state.intensity_data) > 20: st.session_state.intensity_data.pop(0)
+        query = st.text_input("QUERY_INPUT", placeholder=placeholder_text, label_visibility="collapsed")
         
-        logs = []
-        def ui_callback(msg):
-            logs.append(msg)
-            with status_area.container():
-                st.code("\n".join(logs), language="text")
-
-        runner = AgentRunner(callback=ui_callback, llm_provider=provider.lower())
-        
-        with st.status("🧠 Neon Engine is Processing...", expanded=True) as status:
-            actual_year = year_val if year_val > 0 else None
-            report_md_path, papers = runner.run_demo(query=query, live=True, year=actual_year, mode=mode_val)
+        col_u1, col_u2 = st.columns([3, 1])
+        with col_u1:
+            button_label = "✨ Start Research"
+            if st.session_state.active_tool == "Summarize PDF": button_label = "📝 Summarize PDF"
+            elif st.session_state.active_tool == "Compare Papers": button_label = "🔍 Compare Research"
+            elif st.session_state.active_tool == "Generate Ideas": button_label = "💡 Generate Hypotheses"
             
-            if report_md_path and os.path.exists(report_md_path):
-                # Update Dynamic KPIs
-                st.session_state.kpi_tasks = str(int(st.session_state.kpi_tasks) + len(papers))
-                st.session_state.kpi_tickets = str(int(st.session_state.kpi_tickets) + 1)
-                update_kpi_row()
-                
-                status.update(label="✅ Analysis Complete!", state="complete", expanded=False)
-                st.balloons()
-                
-                st.success(f"Intel Report Ready!")
-                
-                btn_col1, btn_col2, btn_col3 = st.columns(3)
-                docx_path = report_md_path.replace(".md", ".docx")
-                if os.path.exists(docx_path):
-                    with open(docx_path, "rb") as f:
-                        btn_col1.download_button("📥 Word (.docx)", f, os.path.basename(docx_path), width="stretch")
-                
-                txt_path = report_md_path.replace(".md", ".txt")
-                if os.path.exists(txt_path):
-                    with open(txt_path, "r", encoding="utf-8") as f:
-                        btn_col2.download_button("📄 Plain Text (.txt)", f.read(), os.path.basename(txt_path), width="stretch")
+            go_button = st.button(button_label, use_container_width=True)
+        with col_u2:
+            uploaded_file = st.file_uploader("PDF_UPLOAD", type=["pdf"], label_visibility="collapsed")
+        st.markdown("</div>", unsafe_allow_html=True)
 
-                with open(report_md_path, "r", encoding="utf-8") as f:
-                    btn_col3.download_button("🔗 Markdown (.md)", f.read(), os.path.basename(report_md_path), width="stretch")
+    st.divider()
+
+    # Results Area
+    st.markdown(f"<h3 class='gradient-text' style='font-weight: 600; margin-bottom: 24px;'>💡 Featured Research</h3>", unsafe_allow_html=True)
+    
+    # Show demo cards on initial load if no searches yet
+    if not st.session_state.papers_found:
+        demo_papers = [
+            {
+                "title": "Large Language Models as Decentralized Decision Makers",
+                "summary": "Explores how large language models can function as autonomous agents in decentralized systems, making complex decisions without central coordination.",
+                "pdf_url": "https://arxiv.org/abs/2312.10069",
+                "authors": ["Alice Chen", "Bob Smith"]
+            },
+            {
+                "title": "Efficient Fine-tuning of Large Language Models",
+                "summary": "Proposes novel techniques for efficiently fine-tuning large language models while maintaining performance and reducing computational overhead.",
+                "pdf_url": "https://arxiv.org/abs/2310.12345",
+                "authors": ["Diana Ross", "Eve Wilson"]
+            }
+        ]
+        
+        st.markdown(f"<p style='color: {muted_color}; font-size: 0.9rem; margin-bottom: 20px;'>Start a research query above to discover relevant papers, or explore sample research findings below.</p>", unsafe_allow_html=True)
+        
+        grid_cols = st.columns(2)
+        for idx, paper in enumerate(demo_papers):
+            with grid_cols[idx % 2]:
+                render_result_card(
+                    title=paper.get("title", "Unknown Source"),
+                    summary=paper.get("summary", "No summary available."),
+                    link=paper.get("pdf_url", "#"),
+                    authors=paper.get("authors", [])
+                )
+
+    if go_button:
+        if not query and not uploaded_file:
+            st.warning("Please enter a query or upload a file.")
+        else:
+            # SAVE TO HISTORY IMMEDIATELY BEFORE PROCESS
+            st.session_state.history.append({
+                "query": query if query else "PDF Analysis",
+                "time": datetime.datetime.now().strftime("%H:%M:%S")
+            })
+            
+            # Modern Loading State
+            with st.container():
+                loading_msg = "Analyzing your research query..."
+                if st.session_state.active_tool == "Summarize PDF": loading_msg = "Extracting intelligence from PDF..."
+                st.markdown(f"<p style='color: {accent}; text-align: center; font-weight: 600; letter-spacing: 1px; margin-bottom: 16px;'>{loading_msg}</p>", unsafe_allow_html=True)
+                progress_bar = st.progress(0)
+                for i in range(101):
+                    import time
+                    time.sleep(0.005)
+                    progress_bar.progress(i)
+            
+            def ui_callback(msg): pass
+
+            runner = AgentRunner(callback=ui_callback, llm_provider=provider.lower())
+            
+            with st.spinner("✨ Researching..."):
+                actual_year = year_val if year_val > 0 else None
+                report_md_path, papers = runner.run_demo(query=query, live=True, year=actual_year, mode=mode_val)
                 
-                st.markdown("---")
-                st.markdown(f"<h3 class='gradient-text' style='font-weight: 600;'>📊 Research Discoveries</h3>", unsafe_allow_html=True)
-                
-                grid_cols = st.columns(2)
-                for idx, paper in enumerate(papers):
-                    with grid_cols[idx % 2]:
-                        st.markdown(render_result_card(
-                            title=paper.get("title", "Unknown Source"),
-                            summary=paper.get("summary", "No summary available."),
-                            link=paper.get("pdf_url", paper.get("google_scholar_url", "#")),
-                            authors=paper.get("authors", [])
-                        ), unsafe_allow_html=True)
-                
-                st.markdown("---")
-                with st.expander("📖 View Strategic Intelligence Report", expanded=False):
-                    st.markdown("### 🔍 Strategic Summary Preview")
+                if report_md_path and os.path.exists(report_md_path):
+                    st.session_state.papers_found += len(papers)
+                    st.session_state.searches_made += 1
+                    st.session_state.reports_generated += 1
+                    
+                    st.success("✅ Research Complete!")
+                    
+                    btn_col1, btn_col2, btn_col3 = st.columns(3)
+                    docx_path = report_md_path.replace(".md", ".docx")
+                    if os.path.exists(docx_path):
+                        with open(docx_path, "rb") as f:
+                            btn_col1.download_button("📥 Word (.docx)", f, os.path.basename(docx_path), use_container_width=True)
+                    
+                    txt_path = report_md_path.replace(".md", ".txt")
+                    if os.path.exists(txt_path):
+                        with open(txt_path, "r", encoding="utf-8") as f:
+                            btn_col2.download_button("📄 Plain Text (.txt)", f.read(), os.path.basename(txt_path), use_container_width=True)
+
                     with open(report_md_path, "r", encoding="utf-8") as f:
-                        st.markdown(f.read())
-            else:
-                status.update(label="❌ Analysis Interrupted", state="error")
+                        btn_col3.download_button("🔗 Markdown (.md)", f.read(), os.path.basename(report_md_path), use_container_width=True)
+                    
+                    st.markdown("---")
+                    st.markdown(f"<h3 class='gradient-text' style='font-weight: 600;'>📊 Research Discoveries</h3>", unsafe_allow_html=True)
+                    
+                    grid_cols = st.columns(2)
+                    for idx, paper in enumerate(papers):
+                        with grid_cols[idx % 2]:
+                            render_result_card(
+                                title=paper.get("title", "Unknown Source"),
+                                summary=paper.get("summary", "No summary available."),
+                                link=paper.get("pdf_url", paper.get("google_scholar_url", "#")),
+                                authors=paper.get("authors", [])
+                            )
+                    
+                    st.markdown("---")
+                    with st.expander("📖 View Full Report", expanded=False):
+                        with open(report_md_path, "r", encoding="utf-8") as f:
+                            st.markdown(f.read())
+                    
+                    # Force rerun once to update sidebar history
+                    st.rerun()
+                else:
+                    st.error("❌ Research could not be completed.")
+
+st.markdown("<br><br><br><p style='text-align: center; color: #64748B; font-size: 0.8rem;'>ScholarPulse · Built with ❤️ for researchers</p>", unsafe_allow_html=True)
 
 st.markdown("<br><br><br><p style='text-align: center; color: #64748B; font-size: 0.8rem;'>ScholarPulse · Built with ❤️ for researchers</p>", unsafe_allow_html=True)

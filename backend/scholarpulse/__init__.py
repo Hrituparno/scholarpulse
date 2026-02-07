@@ -1,0 +1,1 @@
+"""ScholarPulse Django project."""

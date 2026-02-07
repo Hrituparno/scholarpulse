@@ -136,6 +136,7 @@ class LiteratureReviewer:
         prompt = (
             f"Analyze this research abstract and extract details.\n"
             f"CRITICAL: If a field is not explicitly stated, use your technical knowledge to INFER the most likely industrial standard or methodology used in this domain. DO NOT write 'N/A' or 'Not mentioned'. Provide a logical 'Best Guess'.\n\n"
+            f"STRICT RULE: Your output values must NOT contain any HTML tags, CSS styles, or Markdown formatting (like bold, links, or backticks). Provide raw text ONLY.\n\n"
             f"Abstract: {paper['summary']}\n\n"
             f"Extract:\n"
             f"1. Objective: (1 concise sentence)\n"
