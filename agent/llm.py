@@ -421,6 +421,10 @@ class LLMClient:
         
         Automatically detects task type and routes to appropriate provider.
         """
+        if not self.available:
+            logger.error("LLM not available.")
+            return ""
+        
         # Detect task type from prompt
         prompt_lower = prompt.lower()
         
@@ -435,97 +439,3 @@ class LLMClient:
         # Deep tasks: synthesis, analysis, combination
         else:
             return self.multi_client.generate_deep(prompt, max_tokens, timeout=30)
-
-    def generate(self, prompt: str, max_tokens: int = 2048, retries: int = 3) -> str:
-        """
-        Generate text from the LLM with retry logic and proper error handling.
-        
-        Args:
-            prompt: The input prompt
-            max_tokens: Maximum tokens to generate
-            retries: Number of retry attempts on failure
-            
-        Returns:
-            Generated text or empty string on failure
-        """
-        if not self.available:
-            logger.error("LLM not available.")
-            return ""
-
-        import time
-        
-        for attempt in range(retries):
-            try:
-                if self.provider in ["groq", "oxlo"]:
-                    # Groq / Oxlo Chat Completion with timeout
-                    chat_completion = self.client.chat.completions.create(
-                        messages=[
-                            {
-                                "role": "user",
-                                "content": prompt,
-                            }
-                        ],
-                        model=self.model,
-                        max_tokens=max_tokens,
-                        temperature=0.7,
-                        timeout=60.0,  # Explicit timeout
-                    )
-                    
-                    if not chat_completion.choices:
-                        logger.warning(f"Empty response from {self.provider} (attempt {attempt + 1}/{retries})")
-                        if attempt < retries - 1:
-                            time.sleep(2 ** attempt)  # Exponential backoff
-                            continue
-                        return ""
-                    
-                    content = chat_completion.choices[0].message.content
-                    if content:
-                        return content
-                    else:
-                        logger.warning(f"Null content from {self.provider} (attempt {attempt + 1}/{retries})")
-                        if attempt < retries - 1:
-                            time.sleep(2 ** attempt)
-                            continue
-                        return ""
-
-                elif self.provider == "gemini":
-                    # New Gemini SDK Generation
-                    response = self.client.models.generate_content(
-                        model=self.model,
-                        contents=prompt,
-                        config={
-                            "max_output_tokens": max_tokens,
-                            "temperature": 0.7
-                        }
-                    )
-                    return response.text
-                    
-            except Exception as e:
-                error_msg = str(e)
-                logger.error(
-                    f"LLM generation failed ({self.provider}, attempt {attempt + 1}/{retries}): {error_msg}",
-                    exc_info=True
-                )
-                
-                # Check for specific error types
-                if "rate_limit" in error_msg.lower() or "429" in error_msg:
-                    logger.warning(f"Rate limit hit, backing off...")
-                    if attempt < retries - 1:
-                        time.sleep(5 * (attempt + 1))  # Longer backoff for rate limits
-                        continue
-                elif "authentication" in error_msg.lower() or "401" in error_msg:
-                    logger.error(f"Authentication failed - check API key for {self.provider}")
-                    return ""  # Don't retry auth errors
-                elif "model" in error_msg.lower() and "not found" in error_msg.lower():
-                    logger.error(f"Model {self.model} not found - may be deprecated")
-                    return ""  # Don't retry model errors
-                
-                # Retry on other errors
-                if attempt < retries - 1:
-                    time.sleep(2 ** attempt)
-                    continue
-                    
-                return ""
-        
-        logger.error(f"All {retries} attempts failed for {self.provider}")
-        return ""
