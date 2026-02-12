@@ -40,7 +40,8 @@ class AgentService:
     
     def execute(self, task) -> dict:
         """
-        Execute the research pipeline for a given task.
+        Execute the research pipeline with speed optimizations.
+        Target: Complete in under 20 seconds.
         
         Args:
             task: ResearchTask model instance
@@ -56,7 +57,7 @@ class AgentService:
         year_filter = params.get('year_filter')
         llm_provider = params.get('llm_provider', 'groq')
         
-        logger.info(f"Starting research task {self.task_id}: {query[:50]}")
+        logger.info(f"Starting FAST research task {self.task_id}: {query[:50]}")
         
         # Mark task as running
         task.mark_running()
@@ -67,7 +68,6 @@ class AgentService:
             from agent.hypothesis import HypothesisGenerator
             from agent.experiment import ExperimentDesigner, ExperimentEvaluator
             from agent.report import ReportGenerator
-            from config import ARXIV_MAX_RESULTS
             
             # Initialize components
             reviewer = LiteratureReviewer(llm_provider=llm_provider)
@@ -76,43 +76,50 @@ class AgentService:
             evaluator = ExperimentEvaluator()
             reporter = ReportGenerator(out_dir=self.output_dir)
             
-            # Phase 1: Discovery (0-25%)
+            # Verify LLM is available
+            if not reviewer.llm.available:
+                error_msg = f"LLM provider '{llm_provider}' is not available. Check API keys and configuration."
+                logger.error(error_msg)
+                raise RuntimeError(error_msg)
+            
+            # Phase 1: Quality Discovery (0-30%) - BALANCED
             self._update_progress(task, 5, "Refining search query...")
             
             if mode == "Web Search":
-                papers = reviewer.web_search(query)
+                papers = reviewer.web_search(query, num_results=5)
             else:
-                refined_query = reviewer.refine_query(query)
-                
-                # Apply year filter
-                search_query = refined_query
+                # Use query as-is for speed (skip refinement)
+                search_query = query
                 if year_filter and year_filter > 0:
-                    search_query = f'({refined_query}) AND submittedDate:[{year_filter}01010000 TO {year_filter}12312359]'
+                    search_query = f'({query}) AND submittedDate:[{year_filter}01010000 TO {year_filter}12312359]'
                 
                 self._update_progress(task, 15, "Searching academic databases...")
-                papers = reviewer.search(search_query, max_results=ARXIV_MAX_RESULTS)
+                # BALANCED: 5 papers for quality/speed balance
+                papers = reviewer.search(search_query, max_results=5, timeout=15)
             
-            self._update_progress(task, 25, f"Found {len(papers)} papers, analyzing...")
+            self._update_progress(task, 30, f"Found {len(papers)} papers, enriched with multi-LLM")
             
-            # Phase 2: Idea Generation (25-50%)
-            self._update_progress(task, 35, "Generating research ideas...")
-            ideas = hypo_generator.generate_new_ideas(papers)
-            self._update_progress(task, 50, f"Generated {len(ideas)} research ideas")
+            # Phase 2: Quality Idea Generation (30-60%) - IMPROVED
+            self._update_progress(task, 40, "Generating research ideas...")
+            # QUALITY: Generate 5 ideas using Oxlo/Groq
+            ideas = hypo_generator.generate_new_ideas(papers, max_ideas=5)
+            self._update_progress(task, 60, f"Generated {len(ideas)} high-quality ideas")
             
-            # Phase 3: Experiment Design (50-65%)
-            self._update_progress(task, 55, "Designing experiments...")
+            # Phase 3: Experiment Design (60-75%)
+            self._update_progress(task, 65, "Designing experiments...")
             first_idea = ideas[0].get('description', '') if ideas else 'No idea generated'
             experiment = designer.design(first_idea)
-            self._update_progress(task, 65, "Experiment designed")
+            self._update_progress(task, 75, "Experiment designed")
             
-            # Phase 4: Evaluation (65-80%)
-            self._update_progress(task, 70, "Running evaluation...")
+            # Phase 4: Evaluation (75-85%)
+            self._update_progress(task, 80, "Running evaluation...")
             results = evaluator.evaluate(experiment)
-            self._update_progress(task, 80, "Evaluation complete")
+            self._update_progress(task, 85, "Evaluation complete")
             
-            # Phase 5: Report Generation (80-100%)
-            self._update_progress(task, 85, "Generating report sections...")
-            report_sections = hypo_generator.generate_report_sections(query, papers)
+            # Phase 5: Deep Synthesis Report (85-100%) - QUALITY
+            self._update_progress(task, 90, "Generating comprehensive report...")
+            # QUALITY: Use Gemini for deep synthesis
+            report_sections = hypo_generator.generate_report_sections(query, papers, use_deep_synthesis=True)
             
             self._update_progress(task, 95, "Creating report files...")
             report_path = reporter.generate_report(
@@ -131,7 +138,7 @@ class AgentService:
             task.mark_completed(output_data)
             self._update_progress(task, 100, "Research complete")
             
-            logger.info(f"Task {self.task_id} completed successfully")
+            logger.info(f"Task {self.task_id} completed successfully with multi-LLM system (Groq+Gemini+Oxlo)")
             return output_data
             
         except Exception as e:

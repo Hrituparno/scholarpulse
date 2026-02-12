@@ -21,32 +21,36 @@ wheels/
 .installed.cfg
 *.egg
 
-# Environment
+# Environment & Secrets
 .env
 .venv
 venv/
 ENV/
+*.key
+*.pem
 
-# Output
+# Database
+*.sqlite3
+db.sqlite3
+
+# Output & Logs
 output/
 step_*.json
+*.log
+logs/
 
 # IDE
 .vscode/
 .idea/
 *.swp
 *.swo
+.DS_Store
 
 # Project specific
 *.docx
-*.md
+
+# Keep important markdown files
 !README.md
-!task.md
-!implementation_plan.md
-!walkthrough.md
-!agent/
-!config.py
-!app.py
-!requirements.txt
-!utils.py
-!run_web_ui.bat
+!DEPLOYMENT_CHECKLIST.md
+!FIX_SUMMARY.md
+!PUBLISH.md

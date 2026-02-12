@@ -7,7 +7,7 @@ import textwrap
 
 
 def get_theme_css(theme: str = "Dark") -> str:
-    """Get complete CSS for the selected premium theme."""
+    """Get complete CSS for the selected premium theme with iPhone glassmorphism."""
     
     # Aurora Minimal Color Palette
     primary_gradient = "linear-gradient(135deg, #6366F1, #8B5CF6)"
