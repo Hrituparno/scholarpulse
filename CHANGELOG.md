@@ -2,6 +2,42 @@
 
 All notable changes to ScholarPulse will be documented in this file.
 
+## [3.0.0] - 2026-02-13
+
+### 🚀 Major: Production Deployment Configuration
+
+#### Changed
+- **BREAKING:** Switched from localhost to production deployment architecture
+- Frontend now defaults to Render backend URL instead of localhost
+- Removed all localhost/tunnel related infrastructure
+
+#### Added
+- `render.yaml` - Render deployment configuration
+- `DEPLOYMENT.md` - Complete production deployment guide
+- `DEPLOY_CHECKLIST.md` - Step-by-step deployment checklist
+- `.streamlit/config.toml` - Streamlit Cloud theme configuration
+- `run_local.bat` - Local development script for testing
+
+#### Removed
+- All Cloudflare tunnel scripts and executables
+- Localhost startup scripts
+- Tunnel setup guides and documentation
+- Unnecessary localhost-specific files
+
+#### Fixed
+- Frontend API client properly configured for production
+- Environment variable handling for different deployment environments
+- CORS configuration optimized for Streamlit Cloud
+
+### 📦 Deployment Ready
+- Backend: Configured for Render with Gunicorn
+- Frontend: Configured for Streamlit Cloud
+- Auto-deploy from GitHub enabled
+- Production-grade error handling
+- Health check endpoints
+
+---
+
 ## [2.0.0] - 2026-02-12
 
 ### 🔧 Fixed - Critical Groq API Integration
