@@ -1,5 +1,5 @@
 services:
-  # Django Backend
+  # Django Backend - Memory Optimized for Free Tier
   - type: web
     name: scholarpulse-backend
     env: python
@@ -7,12 +7,12 @@ services:
     plan: free
     buildCommand: |
       cd backend
-      pip install -r ../requirements.txt
+      pip install -r ../requirements.txt --no-cache-dir
       python manage.py migrate
       python manage.py collectstatic --noinput
     startCommand: |
       cd backend
-      gunicorn scholarpulse.wsgi:application --bind 0.0.0.0:$PORT
+      gunicorn scholarpulse.wsgi:application --bind 0.0.0.0:$PORT --workers 1 --threads 2 --timeout 120 --max-requests 100 --max-requests-jitter 10
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0
@@ -30,4 +30,8 @@ services:
         sync: false
       - key: OXLO_API_KEY
         sync: false
+      - key: PYTHONUNBUFFERED
+        value: 1
+      - key: WEB_CONCURRENCY
+        value: 1
     healthCheckPath: /api/health/

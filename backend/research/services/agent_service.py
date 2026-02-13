@@ -40,8 +40,8 @@ class AgentService:
     
     def execute(self, task) -> dict:
         """
-        Execute the research pipeline with speed optimizations.
-        Target: Complete in under 20 seconds.
+        Execute the research pipeline with MEMORY OPTIMIZATION for Render free tier.
+        Target: Use < 400MB RAM
         
         Args:
             task: ResearchTask model instance
@@ -50,6 +50,7 @@ class AgentService:
             dict with papers, ideas, report_sections, report_formats
         """
         from research.models import ResearchTask, ErrorLog
+        import gc  # Garbage collection for memory management
         
         params = task.input_params
         query = params.get('query', '')
@@ -57,73 +58,72 @@ class AgentService:
         year_filter = params.get('year_filter')
         llm_provider = params.get('llm_provider', 'groq')
         
-        logger.info(f"Starting FAST research task {self.task_id}: {query[:50]}")
+        logger.info(f"Starting MEMORY-OPTIMIZED research task {self.task_id}: {query[:50]}")
         
         # Mark task as running
         task.mark_running()
         
         try:
-            # Import existing agent components
+            # Import only what we need, when we need it (lazy loading)
             from agent.lit_review import LiteratureReviewer
             from agent.hypothesis import HypothesisGenerator
-            from agent.experiment import ExperimentDesigner, ExperimentEvaluator
-            from agent.report import ReportGenerator
             
-            # Initialize components
+            # Phase 1: Paper Search (0-40%) - MINIMAL MEMORY
+            self._update_progress(task, 5, "Searching papers...")
+            
             reviewer = LiteratureReviewer(llm_provider=llm_provider)
-            hypo_generator = HypothesisGenerator(llm_provider=llm_provider)
-            designer = ExperimentDesigner()
-            evaluator = ExperimentEvaluator()
-            reporter = ReportGenerator(out_dir=self.output_dir)
             
             # Verify LLM is available
             if not reviewer.llm.available:
-                error_msg = f"LLM provider '{llm_provider}' is not available. Check API keys and configuration."
+                error_msg = f"LLM provider '{llm_provider}' is not available. Check API keys."
                 logger.error(error_msg)
                 raise RuntimeError(error_msg)
             
-            # Phase 1: Quality Discovery (0-30%) - BALANCED
-            self._update_progress(task, 5, "Refining search query...")
-            
+            # Search with minimal results to save memory
             if mode == "Web Search":
-                papers = reviewer.web_search(query, num_results=5)
+                papers = reviewer.web_search(query, num_results=3)  # Reduced from 5
             else:
-                # Use query as-is for speed (skip refinement)
                 search_query = query
                 if year_filter and year_filter > 0:
                     search_query = f'({query}) AND submittedDate:[{year_filter}01010000 TO {year_filter}12312359]'
                 
-                self._update_progress(task, 15, "Searching academic databases...")
-                # BALANCED: 5 papers for quality/speed balance
-                papers = reviewer.search(search_query, max_results=5, timeout=15)
+                papers = reviewer.search(search_query, max_results=3, timeout=15)  # Reduced from 5
             
-            self._update_progress(task, 30, f"Found {len(papers)} papers, enriched with multi-LLM")
+            self._update_progress(task, 40, f"Found {len(papers)} papers")
             
-            # Phase 2: Quality Idea Generation (30-60%) - IMPROVED
-            self._update_progress(task, 40, "Generating research ideas...")
-            # QUALITY: Generate 5 ideas using Oxlo/Groq
-            ideas = hypo_generator.generate_new_ideas(papers, max_ideas=5)
-            self._update_progress(task, 60, f"Generated {len(ideas)} high-quality ideas")
+            # Clear reviewer from memory
+            del reviewer
+            gc.collect()
             
-            # Phase 3: Experiment Design (60-75%)
-            self._update_progress(task, 65, "Designing experiments...")
-            first_idea = ideas[0].get('description', '') if ideas else 'No idea generated'
-            experiment = designer.design(first_idea)
-            self._update_progress(task, 75, "Experiment designed")
+            # Phase 2: Idea Generation (40-70%) - MEMORY EFFICIENT
+            self._update_progress(task, 50, "Generating ideas...")
             
-            # Phase 4: Evaluation (75-85%)
-            self._update_progress(task, 80, "Running evaluation...")
-            results = evaluator.evaluate(experiment)
-            self._update_progress(task, 85, "Evaluation complete")
+            hypo_generator = HypothesisGenerator(llm_provider=llm_provider)
+            ideas = hypo_generator.generate_new_ideas(papers, max_ideas=3)  # Reduced from 5
             
-            # Phase 5: Deep Synthesis Report (85-100%) - QUALITY
-            self._update_progress(task, 90, "Generating comprehensive report...")
-            # QUALITY: Use Gemini for deep synthesis
-            report_sections = hypo_generator.generate_report_sections(query, papers, use_deep_synthesis=True)
+            self._update_progress(task, 70, f"Generated {len(ideas)} ideas")
             
-            self._update_progress(task, 95, "Creating report files...")
-            report_path = reporter.generate_report(
-                query, papers, ideas, report_sections, experiment, results
+            # Phase 3: Report Generation (70-100%) - LIGHTWEIGHT
+            self._update_progress(task, 80, "Creating report...")
+            
+            # Generate lightweight report sections (no deep synthesis to save memory)
+            report_sections = hypo_generator.generate_report_sections(
+                query, papers, use_deep_synthesis=False  # Disabled to save memory
+            )
+            
+            # Clear generator from memory
+            del hypo_generator
+            gc.collect()
+            
+            self._update_progress(task, 90, "Finalizing report...")
+            
+            # Import reporter only when needed
+            from agent.report import ReportGenerator
+            reporter = ReportGenerator(out_dir=self.output_dir)
+            
+            # Generate minimal report (skip experiment design to save memory)
+            report_path = reporter.generate_simple_report(
+                query, papers, ideas, report_sections
             )
             
             # Build output data
@@ -134,11 +134,15 @@ class AgentService:
                 'report_formats': self._get_report_formats(report_path),
             }
             
+            # Clear reporter from memory
+            del reporter
+            gc.collect()
+            
             # Mark task as completed
             task.mark_completed(output_data)
             self._update_progress(task, 100, "Research complete")
             
-            logger.info(f"Task {self.task_id} completed successfully with multi-LLM system (Groq+Gemini+Oxlo)")
+            logger.info(f"Task {self.task_id} completed (memory-optimized mode)")
             return output_data
             
         except Exception as e:

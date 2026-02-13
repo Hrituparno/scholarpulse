@@ -219,3 +219,69 @@ class ReportGenerator:
         doc.add_paragraph(sections.get('conclusion', ''))
         
         doc.save(path)
+
+    def generate_simple_report(self, query, papers, new_ideas, report_sections=None):
+        """
+        Generate a lightweight report for memory-constrained environments.
+        Only creates Markdown and JSON (skips DOCX and TXT to save memory).
+        """
+        ts = now_iso()
+        timestamp_clean = ts.replace(':', '-').replace('.', '-')
+        
+        # Markdown only
+        md = [f"# 📑 ScholarPulse Research Report: {query.title()}\n"]
+        md.append(f"**Generated**: {ts}\n\n")
+
+        if not report_sections:
+            report_sections = {
+                "introduction": "Introduction generation failed.",
+                "the_issue": "Issue details unavailable.",
+                "conclusion": "Conclusion unavailable."
+            }
+
+        # I. INTRODUCTION
+        md.append("## I. INTRODUCTION 📝\n")
+        md.append(f"{report_sections.get('introduction', '')}\n\n")
+
+        # II. THE ISSUE
+        md.append("## II. THE ISSUE ⚠️\n")
+        md.append(f"{report_sections.get('the_issue', '')}\n\n")
+
+        # III. LITERATURE REVIEW
+        md.append("## III. LITERATURE REVIEW 📑\n")
+        for i, p in enumerate(papers, 1):
+            md.append(f"### {i}. {p['title']}\n")
+            md.append(f"**Summary**: {p['summary']}\n\n")
+
+        # IV. RECOMMENDATIONS
+        md.append("## IV. RECOMMENDATIONS 💡\n")
+        if isinstance(new_ideas, list):
+            for i, idea in enumerate(new_ideas, 1):
+                md.append(f"**{i}. {idea.get('title', 'Untitled')}**\n")
+                md.append(f"{idea.get('description', '')}\n\n")
+
+        # V. CONCLUSION
+        md.append("## V. CONCLUSION ✅\n")
+        md.append(f"{report_sections.get('conclusion', '')}\n\n")
+
+        # Save MD
+        body = "\n".join(md)
+        out_md = self.out_dir / f"report_{timestamp_clean}.md"
+        out_json = self.out_dir / f"report_{timestamp_clean}.json"
+        
+        if not self.out_dir.exists():
+            self.out_dir.mkdir(parents=True, exist_ok=True)
+            
+        save_text(body, out_md)
+        
+        # Save minimal JSON
+        save_json({
+            "query": query, 
+            "papers": papers, 
+            "new_ideas": new_ideas, 
+            "report_sections": report_sections, 
+            "generated_at": ts
+        }, out_json)
+
+        logger.info(f"Simple report saved: {out_md}")
+        return str(out_md)
