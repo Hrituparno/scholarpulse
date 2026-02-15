@@ -283,9 +283,118 @@ def render_dashboard():
             
             progress_container.empty()
             with result_container:
-                render_success_card("Research Complete", f"Analyzed results for: {query}")
+                # Success message
+                st.markdown(f"""
+<div style="background: linear-gradient(135deg, #10B981, #059669); padding: 20px; border-radius: 16px; margin: 32px 0; box-shadow: 0 8px 32px rgba(16, 185, 129, 0.2);">
+    <div style="display: flex; align-items: center; gap: 12px;">
+        <div style="font-size: 2rem;">✅</div>
+        <div>
+            <h3 style="margin: 0; color: white; font-size: 1.3rem; font-weight: 800;">Research Complete!</h3>
+            <p style="margin: 4px 0 0 0; color: rgba(255,255,255,0.9); font-size: 0.95rem;">Successfully analyzed: {query}</p>
+        </div>
+    </div>
+</div>
+""", unsafe_allow_html=True)
+                
+                # Report Summary Section
+                report_sections = result.get('report_sections', {})
+                if report_sections:
+                    st.markdown(f"""
+<div style="margin: 48px 0 32px 0;">
+    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+        <div style="font-size: 2rem;">📋</div>
+        <h2 style="margin: 0; font-size: 1.8rem; font-weight: 800; color: {colors['text']}; background: linear-gradient(135deg, #6366F1, #8B5CF6); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+            Research Report
+        </h2>
+    </div>
+    <p style="color: {colors['muted']}; font-size: 0.95rem; margin-bottom: 24px;">
+        AI-generated comprehensive analysis and insights
+    </p>
+</div>
+""", unsafe_allow_html=True)
+                    
+                    # Introduction Section
+                    if report_sections.get('introduction'):
+                        st.markdown(f"""
+<div class="premium-card" style="margin-bottom: 20px;">
+    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+        <span style="font-size: 1.5rem;">📖</span>
+        <h3 style="margin: 0; font-size: 1.2rem; font-weight: 800; color: {colors['text']};">Introduction</h3>
+    </div>
+    <p style="color: {colors['muted']}; font-size: 0.95rem; line-height: 1.7;">{_sanitize(report_sections['introduction'])}</p>
+</div>
+""", unsafe_allow_html=True)
+                    
+                    # The Issue Section
+                    if report_sections.get('the_issue'):
+                        st.markdown(f"""
+<div class="premium-card" style="margin-bottom: 20px;">
+    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+        <span style="font-size: 1.5rem;">⚠️</span>
+        <h3 style="margin: 0; font-size: 1.2rem; font-weight: 800; color: {colors['text']};">The Challenge</h3>
+    </div>
+    <p style="color: {colors['muted']}; font-size: 0.95rem; line-height: 1.7;">{_sanitize(report_sections['the_issue'])}</p>
+</div>
+""", unsafe_allow_html=True)
+                    
+                    # Conclusion Section
+                    if report_sections.get('conclusion'):
+                        st.markdown(f"""
+<div class="premium-card" style="margin-bottom: 32px;">
+    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+        <span style="font-size: 1.5rem;">🎯</span>
+        <h3 style="margin: 0; font-size: 1.2rem; font-weight: 800; color: {colors['text']};">Conclusion</h3>
+    </div>
+    <p style="color: {colors['muted']}; font-size: 0.95rem; line-height: 1.7;">{_sanitize(report_sections['conclusion'])}</p>
+</div>
+""", unsafe_allow_html=True)
+                
+                # Papers Section
                 render_papers_grid(result.get('papers', []), st.session_state.theme)
+                
+                # Ideas Section
                 render_ideas_list(result.get('ideas', []), st.session_state.theme)
+                
+                # Download Section
+                st.markdown(f"""
+<div style="margin: 48px 0 32px 0;">
+    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+        <div style="font-size: 2rem;">📥</div>
+        <h2 style="margin: 0; font-size: 1.8rem; font-weight: 800; color: {colors['text']}; background: linear-gradient(135deg, #10B981, #059669); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+            Export Results
+        </h2>
+    </div>
+    <p style="color: {colors['muted']}; font-size: 0.95rem; margin-bottom: 20px;">
+        Download your research report in multiple formats
+    </p>
+</div>
+""", unsafe_allow_html=True)
+                
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    st.markdown(f"""
+<div class="premium-card" style="text-align: center; cursor: pointer; transition: transform 0.2s;">
+    <div style="font-size: 2.5rem; margin-bottom: 12px;">📄</div>
+    <h4 style="margin: 0 0 8px 0; font-size: 1rem; font-weight: 700; color: {colors['text']};">Markdown</h4>
+    <p style="margin: 0; font-size: 0.8rem; color: {colors['muted']};">Formatted text</p>
+</div>
+""", unsafe_allow_html=True)
+                with col2:
+                    st.markdown(f"""
+<div class="premium-card" style="text-align: center; cursor: pointer; transition: transform 0.2s;">
+    <div style="font-size: 2.5rem; margin-bottom: 12px;">📊</div>
+    <h4 style="margin: 0 0 8px 0; font-size: 1rem; font-weight: 700; color: {colors['text']};">JSON</h4>
+    <p style="margin: 0; font-size: 0.8rem; color: {colors['muted']};">Structured data</p>
+</div>
+""", unsafe_allow_html=True)
+                with col3:
+                    st.markdown(f"""
+<div class="premium-card" style="text-align: center; cursor: pointer; transition: transform 0.2s;">
+    <div style="font-size: 2.5rem; margin-bottom: 12px;">📝</div>
+    <h4 style="margin: 0 0 8px 0; font-size: 1rem; font-weight: 700; color: {colors['text']};">Plain Text</h4>
+    <p style="margin: 0; font-size: 0.8rem; color: {colors['muted']};">Simple format</p>
+</div>
+""", unsafe_allow_html=True)
                 
                 # Sync fresh stats from backend
                 sync_kpis()
