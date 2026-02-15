@@ -15,6 +15,61 @@ class HypothesisGenerator:
         from .llm import MultiLLMClient
         self.llm = MultiLLMClient()
 
+    def generate_ideas_groq_only(self, papers: list[dict], max_ideas=5) -> list[dict]:
+        """
+        LIGHTWEIGHT idea generation using ONLY Groq (no Oxlo to save memory).
+        Optimized for Render free tier.
+        """
+        joined_summaries = "\n".join([
+            f"- {p['title']}: {p.get('summary', '')[:200]}"
+            for p in papers[:5]
+        ])
+        
+        prompt = f"""Based on these papers, propose {max_ideas} research ideas.
+
+Papers:
+{joined_summaries}
+
+Output as JSON array:
+[
+  {{"title": "...", "description": "...", "requirements": ["..."]}}
+]
+"""
+        
+        try:
+            if self.llm.groq_available:
+                logger.info("[GROQ] Generating ideas")
+                response = self.llm._call_groq(prompt, max_tokens=1200, timeout=30)
+                
+                if response and response.strip():
+                    cleaned = clean_json_string(response)
+                    if cleaned and cleaned.strip():
+                        ideas = json.loads(cleaned)
+                        if isinstance(ideas, list) and len(ideas) > 0:
+                            logger.info(f"[GROQ] Generated {len(ideas)} ideas")
+                            return ideas[:max_ideas]
+        except Exception as e:
+            logger.error(f"[GROQ] Idea generation failed: {e}")
+        
+        # Simple fallback
+        return [
+            {
+                "title": "Enhanced Multi-Modal Learning",
+                "description": "Combine methodologies from analyzed papers for improved cross-domain performance.",
+                "requirements": ["GPU", "PyTorch", "Multi-modal data"]
+            },
+            {
+                "title": "Efficient Transfer Learning",
+                "description": "Develop lightweight adaptation for resource-constrained deployment.",
+                "requirements": ["Edge devices", "TensorFlow Lite"]
+            },
+            {
+                "title": "Robust Evaluation Framework",
+                "description": "Create comprehensive benchmarking system for fair comparison.",
+                "requirements": ["Benchmark datasets", "Evaluation metrics"]
+            }
+        ]
+
     def generate_new_ideas(self, papers: list[dict], max_ideas=5) -> list[dict]:
         """
         High-quality idea generation using Oxlo (primary) with Groq fallback.

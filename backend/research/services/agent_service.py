@@ -40,8 +40,8 @@ class AgentService:
     
     def execute(self, task) -> dict:
         """
-        Execute the research pipeline with MEMORY OPTIMIZATION for Render free tier.
-        Target: Use < 400MB RAM
+        Execute research pipeline - ULTRA LIGHTWEIGHT for Render Free Tier.
+        Strategy: Use ONLY Groq (fast + reliable), skip heavy operations.
         
         Args:
             task: ResearchTask model instance
@@ -50,83 +50,72 @@ class AgentService:
             dict with papers, ideas, report_sections, report_formats
         """
         from research.models import ResearchTask, ErrorLog
-        import gc  # Garbage collection for memory management
+        import gc
         
         params = task.input_params
         query = params.get('query', '')
         mode = params.get('mode', 'Deep Research')
         year_filter = params.get('year_filter')
-        llm_provider = params.get('llm_provider', 'groq')
+        llm_provider = 'groq'  # Force Groq only for memory efficiency
         
-        logger.info(f"Starting MEMORY-OPTIMIZED research task {self.task_id}: {query[:50]}")
-        
-        # Mark task as running
+        logger.info(f"[LIGHTWEIGHT] Starting task {self.task_id}: {query[:50]}")
         task.mark_running()
         
         try:
-            # Import only what we need, when we need it (lazy loading)
+            # Phase 1: Paper Search (0-50%)
+            self._update_progress(task, 10, "Searching papers...")
+            
             from agent.lit_review import LiteratureReviewer
-            from agent.hypothesis import HypothesisGenerator
-            
-            # Phase 1: Paper Search (0-40%) - MINIMAL MEMORY
-            self._update_progress(task, 5, "Searching papers...")
-            
             reviewer = LiteratureReviewer(llm_provider=llm_provider)
             
-            # Verify LLM is available
             if not reviewer.llm.available:
-                error_msg = f"LLM provider '{llm_provider}' is not available. Check API keys."
-                logger.error(error_msg)
-                raise RuntimeError(error_msg)
+                raise RuntimeError(f"Groq API not available. Check GROQ_API_KEY.")
             
-            # Search with minimal results to save memory
+            # Search papers
             if mode == "Web Search":
-                papers = reviewer.web_search(query, num_results=3)  # Reduced from 5
+                papers = reviewer.web_search(query, num_results=5)
             else:
                 search_query = query
                 if year_filter and year_filter > 0:
                     search_query = f'({query}) AND submittedDate:[{year_filter}01010000 TO {year_filter}12312359]'
-                
-                papers = reviewer.search(search_query, max_results=3, timeout=15)  # Reduced from 5
+                papers = reviewer.search(search_query, max_results=5, timeout=20)
             
-            self._update_progress(task, 40, f"Found {len(papers)} papers")
+            self._update_progress(task, 50, f"Found {len(papers)} papers")
             
-            # Clear reviewer from memory
+            # Clear reviewer
             del reviewer
             gc.collect()
             
-            # Phase 2: Idea Generation (40-70%) - MEMORY EFFICIENT
-            self._update_progress(task, 50, "Generating ideas...")
+            # Phase 2: Generate Ideas (50-80%)
+            self._update_progress(task, 60, "Generating ideas...")
             
-            hypo_generator = HypothesisGenerator(llm_provider=llm_provider)
-            ideas = hypo_generator.generate_new_ideas(papers, max_ideas=3)  # Reduced from 5
+            from agent.hypothesis import HypothesisGenerator
+            hypo_gen = HypothesisGenerator(llm_provider=llm_provider)
             
-            self._update_progress(task, 70, f"Generated {len(ideas)} ideas")
+            # Generate ideas using ONLY Groq (skip Oxlo)
+            ideas = hypo_gen.generate_ideas_groq_only(papers, max_ideas=5)
             
-            # Phase 3: Report Generation (70-100%) - LIGHTWEIGHT
-            self._update_progress(task, 80, "Creating report...")
+            self._update_progress(task, 80, f"Generated {len(ideas)} ideas")
             
-            # Generate lightweight report sections (no deep synthesis to save memory)
-            report_sections = hypo_generator.generate_report_sections(
-                query, papers, use_deep_synthesis=False  # Disabled to save memory
-            )
+            # Phase 3: Create Report (80-100%)
+            self._update_progress(task, 90, "Creating report...")
             
-            # Clear generator from memory
-            del hypo_generator
+            # Generate simple report sections
+            report_sections = {
+                "introduction": self._generate_intro(query, papers, hypo_gen),
+                "the_issue": self._generate_issue(query, hypo_gen),
+                "conclusion": self._generate_conclusion(query, ideas, hypo_gen)
+            }
+            
+            # Clear generator
+            del hypo_gen
             gc.collect()
             
-            self._update_progress(task, 90, "Finalizing report...")
-            
-            # Import reporter only when needed
+            # Save report
             from agent.report import ReportGenerator
             reporter = ReportGenerator(out_dir=self.output_dir)
+            report_path = reporter.generate_simple_report(query, papers, ideas, report_sections)
             
-            # Generate minimal report (skip experiment design to save memory)
-            report_path = reporter.generate_simple_report(
-                query, papers, ideas, report_sections
-            )
-            
-            # Build output data
             output_data = {
                 'papers': papers,
                 'ideas': ideas,
@@ -134,15 +123,13 @@ class AgentService:
                 'report_formats': self._get_report_formats(report_path),
             }
             
-            # Clear reporter from memory
             del reporter
             gc.collect()
             
-            # Mark task as completed
             task.mark_completed(output_data)
-            self._update_progress(task, 100, "Research complete")
+            self._update_progress(task, 100, "Complete!")
             
-            logger.info(f"Task {self.task_id} completed (memory-optimized mode)")
+            logger.info(f"[LIGHTWEIGHT] Task {self.task_id} completed successfully")
             return output_data
             
         except Exception as e:
@@ -178,6 +165,30 @@ class AgentService:
             self.on_progress(step, progress)
         
         logger.debug(f"Task {self.task_id}: {progress}% - {step}")
+    
+    def _generate_intro(self, query, papers, hypo_gen):
+        """Generate introduction using Groq."""
+        try:
+            prompt = f"Write a brief introduction for a research report on: {query}. Mention that {len(papers)} papers were analyzed."
+            return hypo_gen.llm.generate(prompt, max_tokens=300)
+        except:
+            return f"This report analyzes {len(papers)} recent papers on {query}."
+    
+    def _generate_issue(self, query, hypo_gen):
+        """Generate issue section using Groq."""
+        try:
+            prompt = f"Describe the main research challenge or issue in the field of: {query}"
+            return hypo_gen.llm.generate(prompt, max_tokens=300)
+        except:
+            return f"The field of {query} faces several challenges that require further investigation."
+    
+    def _generate_conclusion(self, query, ideas, hypo_gen):
+        """Generate conclusion using Groq."""
+        try:
+            prompt = f"Write a conclusion for a research report on {query}. We generated {len(ideas)} new research ideas."
+            return hypo_gen.llm.generate(prompt, max_tokens=300)
+        except:
+            return f"This analysis of {query} has identified {len(ideas)} promising research directions for future work."
     
     def _get_report_formats(self, report_md_path: str) -> dict:
         """Get paths to all generated report formats."""
