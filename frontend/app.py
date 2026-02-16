@@ -355,7 +355,7 @@ def render_dashboard():
                 # Ideas Section
                 render_ideas_list(result.get('ideas', []), st.session_state.theme)
                 
-                # Download Section
+                # Download Section with functional buttons
                 st.markdown(f"""
 <div style="margin: 48px 0 32px 0;">
     <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
@@ -370,31 +370,69 @@ def render_dashboard():
 </div>
 """, unsafe_allow_html=True)
                 
+                # Functional download buttons
                 col1, col2, col3 = st.columns(3)
+                
+                # Prepare download data
+                report_md = f"""# Research Report: {query}
+
+## Introduction
+{report_sections.get('introduction', '')}
+
+## The Issue
+{report_sections.get('the_issue', '')}
+
+## Papers Found
+"""
+                for i, p in enumerate(result.get('papers', []), 1):
+                    report_md += f"\n### {i}. {p.get('title', 'Untitled')}\n"
+                    report_md += f"**Summary:** {p.get('summary', '')}\n\n"
+                
+                report_md += "\n## Research Ideas\n"
+                for i, idea in enumerate(result.get('ideas', []), 1):
+                    report_md += f"\n### {i}. {idea.get('title', 'Untitled')}\n"
+                    report_md += f"{idea.get('description', '')}\n\n"
+                
+                report_md += f"\n## Conclusion\n{report_sections.get('conclusion', '')}"
+                
+                # JSON data
+                import json
+                report_json = json.dumps({
+                    "query": query,
+                    "papers": result.get('papers', []),
+                    "ideas": result.get('ideas', []),
+                    "report_sections": report_sections
+                }, indent=2)
+                
+                # Plain text
+                report_txt = report_md.replace('#', '').replace('**', '')
+                
                 with col1:
-                    st.markdown(f"""
-<div class="premium-card" style="text-align: center; cursor: pointer; transition: transform 0.2s;">
-    <div style="font-size: 2.5rem; margin-bottom: 12px;">📄</div>
-    <h4 style="margin: 0 0 8px 0; font-size: 1rem; font-weight: 700; color: {colors['text']};">Markdown</h4>
-    <p style="margin: 0; font-size: 0.8rem; color: {colors['muted']};">Formatted text</p>
-</div>
-""", unsafe_allow_html=True)
+                    st.download_button(
+                        label="📄 Download Markdown",
+                        data=report_md,
+                        file_name=f"research_report_{query[:30].replace(' ', '_')}.md",
+                        mime="text/markdown",
+                        use_container_width=True
+                    )
+                
                 with col2:
-                    st.markdown(f"""
-<div class="premium-card" style="text-align: center; cursor: pointer; transition: transform 0.2s;">
-    <div style="font-size: 2.5rem; margin-bottom: 12px;">📊</div>
-    <h4 style="margin: 0 0 8px 0; font-size: 1rem; font-weight: 700; color: {colors['text']};">JSON</h4>
-    <p style="margin: 0; font-size: 0.8rem; color: {colors['muted']};">Structured data</p>
-</div>
-""", unsafe_allow_html=True)
+                    st.download_button(
+                        label="📊 Download JSON",
+                        data=report_json,
+                        file_name=f"research_report_{query[:30].replace(' ', '_')}.json",
+                        mime="application/json",
+                        use_container_width=True
+                    )
+                
                 with col3:
-                    st.markdown(f"""
-<div class="premium-card" style="text-align: center; cursor: pointer; transition: transform 0.2s;">
-    <div style="font-size: 2.5rem; margin-bottom: 12px;">📝</div>
-    <h4 style="margin: 0 0 8px 0; font-size: 1rem; font-weight: 700; color: {colors['text']};">Plain Text</h4>
-    <p style="margin: 0; font-size: 0.8rem; color: {colors['muted']};">Simple format</p>
-</div>
-""", unsafe_allow_html=True)
+                    st.download_button(
+                        label="📝 Download Text",
+                        data=report_txt,
+                        file_name=f"research_report_{query[:30].replace(' ', '_')}.txt",
+                        mime="text/plain",
+                        use_container_width=True
+                    )
                 
                 # Sync fresh stats from backend
                 sync_kpis()

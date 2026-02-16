@@ -10,13 +10,31 @@ from typing import Dict, List, Optional
 
 
 def _sanitize(text: str) -> str:
-    """Sanitize raw agent text to prevent HTML/Markdown breakage."""
+    """Sanitize raw agent text to prevent HTML/Markdown breakage and remove code artifacts."""
     if not text:
         return ""
-    # Remove common artifacts that might trigger Markdown code blocks
-    s = str(text).replace("```", "").replace("`", "")
-    # Escape some basic HTML sensitive chars if needed, though we trust our template structure
+    s = str(text)
+    
+    # Remove code blocks and backticks
+    s = re.sub(r'```[\s\S]*?```', '', s)  # Remove code blocks
+    s = s.replace("```", "").replace("`", "")
+    
+    # Remove common JSON/dict artifacts
+    s = re.sub(r'\{[^}]*\}', '', s)  # Remove dict-like structures
+    s = re.sub(r'\[[^\]]*\]', '', s)  # Remove list-like structures
+    
+    # Remove common programming keywords that might appear
+    programming_keywords = ['def ', 'class ', 'import ', 'from ', 'return ', 'if ', 'else:', 'for ', 'while ']
+    for keyword in programming_keywords:
+        if keyword in s:
+            s = s.split(keyword)[0]  # Take only text before code
+    
+    # Escape HTML
     s = s.replace("<", "&lt;").replace(">", "&gt;")
+    
+    # Clean up extra whitespace
+    s = ' '.join(s.split())
+    
     return s.strip()
 
 
@@ -54,9 +72,15 @@ def render_paper_card(paper: Dict, theme: str = "Dark", index: int = 0):
     tools = _sanitize(paper.get('tools', 'N/A'))
     results = _sanitize(paper.get('results', 'N/A'))
     
-    # Generate paper thumbnail using placeholder service (based on title hash)
-    title_hash = abs(hash(title)) % 1000
-    thumbnail_url = f"https://picsum.photos/seed/{title_hash}/400/250"
+    # Generate paper thumbnail - use a solid gradient instead of external images
+    gradient_colors = [
+        "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+        "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
+        "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
+        "linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)",
+        "linear-gradient(135deg, #fa709a 0%, #fee140 100%)"
+    ]
+    thumbnail_gradient = gradient_colors[index % len(gradient_colors)]
     
     # Extract key insights
     sentences = [s.strip() for s in re.split(r'[.!?]', summary) if len(s.strip()) > 15]
@@ -119,7 +143,8 @@ def render_paper_card(paper: Dict, theme: str = "Dark", index: int = 0):
     # Main card HTML
     html = f"""
 <div class="premium-card" style="animation-delay: {index * 0.1}s; overflow: hidden; transition: transform 0.3s ease, box-shadow 0.3s ease;">
-    <div style="width: 100%; height: 180px; background: linear-gradient(135deg, {accent}40, {accent}20), url('{thumbnail_url}'); background-size: cover; background-position: center; border-radius: 12px; margin-bottom: 16px; position: relative;">
+    <div style="width: 100%; height: 180px; background: {thumbnail_gradient}; border-radius: 12px; margin-bottom: 16px; position: relative; display: flex; align-items: center; justify-content: center;">
+        <div style="font-size: 4rem; opacity: 0.3;">📄</div>
         <div style="position: absolute; top: 12px; right: 12px; background: rgba(0,0,0,0.7); backdrop-filter: blur(10px); padding: 6px 12px; border-radius: 20px; font-size: 0.7rem; font-weight: 800; color: white; text-transform: uppercase;">
             {source}
         </div>
